@@ -3,10 +3,12 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
 
 from app.database import engine, Base
-from app.api import auth, videos, danmaku
+from app.api import auth, videos, danmaku, history
 
 # 导入所有模型，确保建表
-from app.models import user, video, danmaku as danmaku_model
+from app.models import user, video
+from app.models import danmaku as danmaku_model
+from app.models import history as history_model
 
 # 创建所有数据库表
 Base.metadata.create_all(bind=engine)
@@ -30,11 +32,12 @@ app.add_middleware(
 app.include_router(auth.router,    prefix="/api")
 app.include_router(videos.router,  prefix="/api")
 app.include_router(danmaku.router, prefix="/api")
+app.include_router(history.router, prefix="/api")
 
 # 静态文件服务
 app.mount(
     "/storage",
-    StaticFiles(directory="D:/ministream/storage"),
+    StaticFiles(directory="/app/storage"),
     name="storage"
 )
 

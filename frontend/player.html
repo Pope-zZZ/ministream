@@ -338,7 +338,11 @@ if (Hls.isSupported()) {
   const hls = new Hls()
   hls.loadSource(m3u8)
   hls.attachMedia(video)
-  hls.on(Hls.Events.MANIFEST_PARSED, () => video.play())
+  hls.on(Hls.Events.MANIFEST_PARSED, () => {
+    video.play()
+    // 加载完成后恢复上次播放进度
+    loadProgress()
+  })
 }
 
 // ── 选集 ──
@@ -676,6 +680,110 @@ setInterval(() => {
   onlineCount = Math.max(1, onlineCount + Math.floor(Math.random() * 3) - 1)
   document.getElementById('online-count').textContent = onlineCount
 }, 5000)
+// ════════════════════════════════
+// ── 播放记录 ──
+// ════════════════════════════════
+// const API_BASE = 'http://localhost:8000'
+const API_BASE = `${location.protocol}//${location.host}`
+
+// 获取 token
+function getToken() {
+  return localStorage.getItem('ms_token') || null
+}
+
+// 恢复上次播放进度
+async function loadProgress() {
+  if (!Auth.isLoggedIn()) return
+  const token = getToken()
+  if (!token) return
+
+  try {
+    const res = await fetch(`${API_BASE}/api/history/progress/${VIDEO_ID}`, {
+      headers: { 'Authorization': `Bearer ${token}` }
+    })
+    const data = await res.json()
+    if (data.progress && data.progress > 5) {
+      // 距离上次超过5秒才提示跳转
+      showResumeToast(data.progress, data.duration)
+    }
+  } catch (e) {
+    console.log('[历史] 获取进度失败', e)
+  }
+}
+
+// 显示「继续上次」提示条
+function showResumeToast(progress, duration) {
+  const pct = duration > 0 ? Math.round(progress / duration * 100) : 0
+  const timeStr = formatTime(progress)
+
+  let bar = document.getElementById('resume-bar')
+  if (!bar) {
+    bar = document.createElement('div')
+    bar.id = 'resume-bar'
+    bar.style.cssText = `
+      position:fixed; bottom:30px; left:50%; transform:translateX(-50%);
+      background:rgba(20,20,20,0.95); color:#fff; padding:12px 20px;
+      border-radius:12px; font-size:13px; z-index:9999;
+      display:flex; align-items:center; gap:14px;
+      border:1px solid rgba(255,255,255,0.1); box-shadow:0 4px 20px rgba(0,0,0,0.5);
+    `
+    document.body.appendChild(bar)
+  }
+
+  bar.innerHTML = `
+    <span>上次看到 ${timeStr}（${pct}%）</span>
+    <button onclick="resumePlay(${progress})" style="
+      padding:5px 14px; background:var(--accent); color:#fff;
+      border:none; border-radius:6px; font-size:12px; cursor:pointer;
+    ">继续播放</button>
+    <button onclick="document.getElementById('resume-bar').remove()" style="
+      padding:5px 10px; background:rgba(255,255,255,0.1); color:#fff;
+      border:none; border-radius:6px; font-size:12px; cursor:pointer;
+    ">从头开始</button>
+  `
+  bar.style.display = 'flex'
+
+  // 10秒后自动消失
+  setTimeout(() => { if (bar) bar.remove() }, 10000)
+}
+
+// 跳转到上次进度
+function resumePlay(progress) {
+  video.currentTime = progress
+  document.getElementById('resume-bar')?.remove()
+}
+
+// 上报播放进度（每15秒一次）
+async function saveProgress() {
+  if (!Auth.isLoggedIn()) return
+  // if (!video.duration || video.paused) return
+  if (!video.duration) return
+  const token = getToken()
+  if (!token) return
+
+  try {
+    await fetch(`${API_BASE}/api/history/progress`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${token}`
+      },
+      body: JSON.stringify({
+        video_id: parseInt(VIDEO_ID),
+        progress: Math.floor(video.currentTime),
+        duration: Math.floor(video.duration)
+      })
+    })
+  } catch (e) {
+    console.log('[历史] 上报失败', e)
+  }
+}
+
+// 每15秒上报一次
+setInterval(saveProgress, 5000)
+
+// 页面关闭前也上报一次
+window.addEventListener('beforeunload', saveProgress)
 </script>
 </body>
 </html>

@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>葬送的芙莉莲 第二季 · MiniStream</title>
+  <title>播放器 · MiniStream</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+SC:wght@300;400;500;700&family=Bebas+Neue&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="common.css">
@@ -11,56 +11,123 @@
   <style>
     .player-layout { display:flex; gap:24px; padding:24px 32px; align-items:flex-start; }
 
-    /* VIDEO AREA */
+    /* 视频区域 */
     .video-area { flex:1; min-width:0; }
     .breadcrumb { display:flex; align-items:center; gap:8px; font-size:13px; color:var(--text3); margin-bottom:16px; }
     .breadcrumb a { color:var(--text3); text-decoration:none; transition:color 0.2s; }
     .breadcrumb a:hover { color:var(--accent); }
-    .breadcrumb span { color:var(--text2); }
 
-    .video-wrapper {
-      position:relative; width:100%;
-      background:#000; border-radius:10px; overflow:hidden;
-      aspect-ratio:16/9; margin-bottom:20px;
+    /* 播放器容器 */
+    .player-wrap {
+      position:relative; width:100%; background:#000;
+      border-radius:10px; overflow:hidden; aspect-ratio:16/9;
+      margin-bottom:0;
     }
     #player { width:100%; height:100%; display:block; }
-    #player-status {
-      position:absolute; bottom:0; left:0; right:0;
-      background:linear-gradient(transparent, rgba(0,0,0,0.8));
-      padding:20px 16px 12px;
-      font-size:12px; color:rgba(255,255,255,0.7);
-      pointer-events:none;
+
+    /* 弹幕画布 */
+    #danmaku-canvas {
+      position:absolute; top:0; left:0; width:100%; height:100%;
+      pointer-events:none; z-index:5;
     }
 
-    /* ANIME INFO */
+    /* 弹幕开关 */
+    .player-toolbar {
+      display:flex; align-items:center; gap:12px;
+      padding:10px 14px; background:var(--bg2);
+      border:1px solid var(--border); border-top:none;
+      border-radius:0 0 10px 10px; margin-bottom:16px;
+      flex-wrap:wrap;
+    }
+    .toolbar-left { display:flex; align-items:center; gap:10px; flex:1; }
+    .toolbar-right { display:flex; align-items:center; gap:8px; }
+
+    .dm-toggle {
+      display:flex; align-items:center; gap:6px;
+      font-size:12px; color:var(--text2); cursor:pointer;
+      padding:4px 10px; border-radius:6px;
+      background:var(--bg3); border:1px solid var(--border);
+      transition:all 0.2s; user-select:none;
+    }
+    .dm-toggle.active { border-color:var(--accent); color:var(--accent); }
+
+    .dm-opacity { display:flex; align-items:center; gap:6px; font-size:12px; color:var(--text3); }
+    .dm-opacity input { width:60px; accent-color:var(--accent); }
+
+    /* 弹幕发送框 */
+    .dm-send-bar {
+      display:flex; gap:8px; align-items:center;
+      padding:12px 14px; background:var(--bg2);
+      border:1px solid var(--border); border-radius:10px;
+      margin-bottom:20px;
+    }
+    .dm-color-pick { position:relative; }
+    .dm-color-pick input[type="color"] {
+      width:32px; height:32px; border:none; border-radius:6px;
+      cursor:pointer; padding:2px; background:var(--bg3);
+    }
+    .dm-input {
+      flex:1; padding:8px 14px;
+      background:var(--bg3); border:1px solid var(--border);
+      border-radius:8px; color:var(--text); font-size:14px;
+      font-family:inherit; outline:none; transition:border-color 0.2s;
+    }
+    .dm-input:focus { border-color:var(--accent); }
+    .dm-input::placeholder { color:var(--text3); }
+    .dm-send-btn {
+      padding:8px 20px; background:var(--accent); color:#fff;
+      border:none; border-radius:8px; font-size:13px; font-weight:600;
+      cursor:pointer; font-family:inherit; transition:all 0.2s; white-space:nowrap;
+    }
+    .dm-send-btn:hover { background:var(--accent2); }
+
+    /* 弹幕列表 */
+    .dm-list-wrap { margin-bottom:24px; }
+    .dm-list-header { display:flex; align-items:center; justify-content:space-between; margin-bottom:10px; }
+    .dm-list-title { font-size:14px; font-weight:600; display:flex; align-items:center; gap:8px; }
+    .dm-list-title::before { content:''; display:block; width:3px; height:16px; background:var(--accent); border-radius:2px; }
+    .dm-count { font-size:12px; color:var(--text3); }
+    .dm-list {
+      height:180px; overflow-y:auto; background:var(--bg2);
+      border:1px solid var(--border); border-radius:10px;
+      padding:8px;
+    }
+    .dm-list::-webkit-scrollbar { width:4px; }
+    .dm-list::-webkit-scrollbar-thumb { background:var(--border); border-radius:2px; }
+    .dm-item {
+      display:flex; align-items:center; gap:8px;
+      padding:6px 8px; border-radius:6px; font-size:12px;
+      transition:background 0.15s;
+    }
+    .dm-item:hover { background:var(--bg3); }
+    .dm-time { color:var(--text3); flex-shrink:0; width:40px; }
+    .dm-user { color:var(--text3); flex-shrink:0; }
+    .dm-content { flex:1; }
+
+    /* 番剧信息 */
     .anime-info { margin-bottom:24px; }
     .anime-title { font-size:22px; font-weight:700; margin-bottom:8px; }
-    .anime-meta { display:flex; align-items:center; gap:12px; margin-bottom:12px; flex-wrap:wrap; }
-    .meta-tag {
-      font-size:11px; padding:3px 9px; border-radius:4px;
-      background:var(--bg3); border:1px solid var(--border); color:var(--text2);
-    }
+    .anime-meta { display:flex; align-items:center; gap:10px; margin-bottom:12px; flex-wrap:wrap; }
+    .meta-tag { font-size:11px; padding:3px 9px; border-radius:4px; background:var(--bg3); border:1px solid var(--border); color:var(--text2); }
     .meta-tag.red { background:rgba(230,57,70,0.15); border-color:rgba(230,57,70,0.3); color:var(--accent); }
     .anime-desc { font-size:13px; color:var(--text2); line-height:1.8; }
     .anime-desc.collapsed { display:-webkit-box; -webkit-line-clamp:3; -webkit-box-orient:vertical; overflow:hidden; }
     .desc-toggle { font-size:12px; color:var(--accent); cursor:pointer; margin-top:6px; display:inline-block; }
 
-    /* EPISODE LIST */
+    /* 选集 */
     .ep-section { margin-bottom:24px; }
     .ep-header { display:flex; align-items:center; justify-content:space-between; margin-bottom:12px; }
     .ep-title { font-size:15px; font-weight:600; }
-    .ep-sort { font-size:12px; color:var(--text3); cursor:pointer; display:flex; align-items:center; gap:4px; }
     .ep-grid { display:flex; flex-wrap:wrap; gap:8px; }
     .ep-btn {
       min-width:52px; padding:7px 12px; border-radius:7px;
       background:var(--bg3); border:1px solid var(--border);
-      color:var(--text2); font-size:13px; cursor:pointer;
-      transition:all 0.2s; text-align:center;
+      color:var(--text2); font-size:13px; cursor:pointer; transition:all 0.2s;
     }
     .ep-btn:hover { border-color:var(--accent); color:var(--accent); }
     .ep-btn.active { background:var(--accent); border-color:var(--accent); color:#fff; }
 
-    /* SOURCE SELECT */
+    /* 线路 */
     .source-bar { display:flex; align-items:center; gap:10px; margin-bottom:20px; flex-wrap:wrap; }
     .source-label { font-size:13px; color:var(--text3); }
     .source-btn {
@@ -71,7 +138,7 @@
     .source-btn:hover { border-color:var(--accent); color:var(--accent); }
     .source-btn.active { background:var(--accent); border-color:var(--accent); color:#fff; }
 
-    /* SIDEBAR */
+    /* 侧边栏 */
     .player-sidebar { width:280px; flex-shrink:0; }
     .sidebar-section { margin-bottom:24px; }
     .sidebar-title { font-size:14px; font-weight:600; margin-bottom:12px; display:flex; align-items:center; gap:8px; }
@@ -91,13 +158,22 @@
     .related-meta { font-size:11px; color:var(--text3); }
     .related-ep { font-size:11px; color:var(--accent); margin-top:3px; }
 
-    @media(max-width:1024px) {
-      .player-layout { flex-direction:column; }
-      .player-sidebar { width:100%; }
+    /* 在线人数 */
+    .online-count {
+      display:flex; align-items:center; gap:6px;
+      font-size:12px; color:var(--text3);
     }
-    @media(max-width:768px) {
-      .player-layout { padding:16px; }
+    .online-dot {
+      width:7px; height:7px; border-radius:50%;
+      background:#10b981; animation: pulse 2s infinite;
     }
+    @keyframes pulse {
+      0%,100% { opacity:1; }
+      50% { opacity:0.4; }
+    }
+
+    @media(max-width:1024px) { .player-layout { flex-direction:column; } .player-sidebar { width:100%; } }
+    @media(max-width:768px) { .player-layout { padding:16px; } }
   </style>
 </head>
 <body>
@@ -111,14 +187,16 @@
     <li><a href="show-anime.html?filter=end">完结</a></li>
     <li><a href="show-anime.html?sort=hits">排行榜</a></li>
   </ul>
-  <div class="nav-search">
-    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
-    <input type="text" placeholder="搜索动漫...">
+  <div style="display:flex;align-items:center;gap:10px;">
+    <div class="nav-search">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
+      <input type="text" placeholder="搜索动漫...">
+    </div>
+    <div id="nav-user-area"></div>
   </div>
 </nav>
 
 <div class="player-layout">
-  <!-- VIDEO AREA -->
   <div class="video-area">
 
     <div class="breadcrumb">
@@ -129,10 +207,44 @@
       <span>葬送的芙莉莲 第二季</span>
     </div>
 
-    <!-- 播放器 -->
-    <div class="video-wrapper">
+    <!-- 播放器 + 弹幕层 -->
+    <div class="player-wrap">
       <video id="player" controls autoplay muted playsinline></video>
-      <div id="player-status">正在加载...</div>
+      <canvas id="danmaku-canvas"></canvas>
+    </div>
+
+    <!-- 工具栏 -->
+    <div class="player-toolbar">
+      <div class="toolbar-left">
+        <div class="dm-toggle active" id="dm-toggle" onclick="toggleDanmaku()">
+          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
+          弹幕开
+        </div>
+        <div class="dm-opacity">
+          透明度
+          <input type="range" min="30" max="100" value="80" id="dm-opacity" oninput="setOpacity(this.value)">
+        </div>
+        <div class="dm-opacity">
+          速度
+          <input type="range" min="1" max="5" value="3" id="dm-speed">
+        </div>
+      </div>
+      <div class="toolbar-right">
+        <div class="online-count">
+          <div class="online-dot"></div>
+          <span id="online-count">1</span> 人在看
+        </div>
+      </div>
+    </div>
+
+    <!-- 弹幕发送 -->
+    <div class="dm-send-bar">
+      <div class="dm-color-pick">
+        <input type="color" id="dm-color" value="#ffffff" title="选择颜色">
+      </div>
+      <input type="text" class="dm-input" id="dm-input"
+        placeholder="发送弹幕，和大家一起互动～" maxlength="50">
+      <button class="dm-send-btn" onclick="sendDanmaku()">发送</button>
     </div>
 
     <!-- 线路选择 -->
@@ -152,83 +264,48 @@
         <span class="meta-tag">奇幻</span>
         <span class="meta-tag">2026</span>
         <span class="meta-tag">日语</span>
-        <span class="meta-tag">TV番</span>
       </div>
       <div class="anime-desc collapsed" id="desc">
-        在勇者欣梅尔一行人击败魔王之后的世界。与欣梅尔一同缔造和平、寿命长达千年以上的精灵魔法使芙莉蓮，在迎来寿终正寝的欣梅尔之死后，因那时流下的眼泪与心中的情感，芙莉蓮踏上了「了解人类之心的旅程」。第二季续写芙莉蓮与费伦、斯塔尔克一行人的冒险，面对更强大的挑战和更深刻的情感羁绊。
+        在勇者欣梅尔一行人击败魔王之后的世界。精灵魔法使芙莉蓮踏上了「了解人类之心的旅程」，第二季续写芙莉蓮与费伦、斯塔尔克一行人的冒险。
       </div>
       <span class="desc-toggle" onclick="toggleDesc()">展开简介 ▼</span>
     </div>
 
     <!-- 选集 -->
     <div class="ep-section">
-      <div class="ep-header">
-        <div class="ep-title">选集</div>
-        <div class="ep-sort">
-          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 6h18M7 12h10M11 18h2"/></svg>
-          正序
-        </div>
-      </div>
+      <div class="ep-header"><div class="ep-title">选集</div></div>
       <div class="ep-grid" id="ep-grid"></div>
+    </div>
+
+    <!-- 弹幕列表 -->
+    <div class="dm-list-wrap">
+      <div class="dm-list-header">
+        <div class="dm-list-title">弹幕列表</div>
+        <div class="dm-count" id="dm-count">共 0 条</div>
+      </div>
+      <div class="dm-list" id="dm-list"></div>
     </div>
 
   </div>
 
-  <!-- SIDEBAR -->
+  <!-- 侧边栏 -->
   <aside class="player-sidebar">
     <div class="sidebar-section">
       <div class="sidebar-title">相关推荐</div>
       <a href="player.html" class="related-card">
         <img class="related-thumb" src="https://images.unsplash.com/photo-1635805737707-575885ab0820?w=200&q=70" alt="">
-        <div class="related-info">
-          <div class="related-title">咒术回战 第三季</div>
-          <div class="related-meta">动作 · 奇幻</div>
-          <div class="related-ep">更新至12集</div>
-        </div>
+        <div class="related-info"><div class="related-title">咒术回战 第三季</div><div class="related-meta">动作 · 奇幻</div><div class="related-ep">更新至12集</div></div>
       </a>
       <a href="player.html" class="related-card">
         <img class="related-thumb" src="https://images.unsplash.com/photo-1534447677768-be436bb09401?w=200&q=70" alt="">
-        <div class="related-info">
-          <div class="related-title">【我推的孩子】第三季</div>
-          <div class="related-meta">剧情 · 偶像</div>
-          <div class="related-ep">已完结 · 13集</div>
-        </div>
-      </a>
-      <a href="player.html" class="related-card">
-        <img class="related-thumb" src="https://images.unsplash.com/photo-1614854262318-831574f15f1f?w=200&q=70" alt="">
-        <div class="related-info">
-          <div class="related-title">勇者之屑</div>
-          <div class="related-meta">动作 · 奇幻</div>
-          <div class="related-ep">更新至03集</div>
-        </div>
-      </a>
-      <a href="player.html" class="related-card">
-        <img class="related-thumb" src="https://images.unsplash.com/photo-1502472584811-0a2f2feb8968?w=200&q=70" alt="">
-        <div class="related-info">
-          <div class="related-title">JOJO的奇妙冒险 飙马野郎</div>
-          <div class="related-meta">冒险 · 动作</div>
-          <div class="related-ep">更新至07集</div>
-        </div>
+        <div class="related-info"><div class="related-title">【我推的孩子】第三季</div><div class="related-meta">剧情 · 偶像</div><div class="related-ep">已完结 · 13集</div></div>
       </a>
       <a href="player.html" class="related-card">
         <img class="related-thumb" src="https://images.unsplash.com/photo-1560762484-813fc97650a0?w=200&q=70" alt="">
-        <div class="related-info">
-          <div class="related-title">地狱乐 第二季</div>
-          <div class="related-meta">动作 · 冒险</div>
-          <div class="related-ep">已完结 · 12集</div>
-        </div>
-      </a>
-      <a href="player.html" class="related-card">
-        <img class="related-thumb" src="https://images.unsplash.com/photo-1519638399535-1b036603ac77?w=200&q=70" alt="">
-        <div class="related-info">
-          <div class="related-title">相反的你和我</div>
-          <div class="related-meta">爱情 · 校园</div>
-          <div class="related-ep">已完结 · 12集</div>
-        </div>
+        <div class="related-info"><div class="related-title">地狱乐 第二季</div><div class="related-meta">动作 · 冒险</div><div class="related-ep">已完结 · 12集</div></div>
       </a>
     </div>
   </aside>
-
 </div>
 
 <footer>
@@ -241,59 +318,296 @@
   <div class="footer-text">© 2026 MiniStream · 仅供学习使用</div>
 </footer>
 
+<script src="api.js"></script>
+<script src="search.js"></script>
 <script>
-  // 生成选集按钮
-  const epGrid = document.getElementById('ep-grid');
-  for (let i = 1; i <= 10; i++) {
-    const btn = document.createElement('button');
-    btn.className = 'ep-btn' + (i === 1 ? ' active' : '');
-    btn.textContent = `第${i}集`;
-    btn.onclick = () => {
-      document.querySelectorAll('.ep-btn').forEach(b => b.classList.remove('active'));
-      btn.classList.add('active');
-    };
-    epGrid.appendChild(btn);
+// ── 导航登录状态 ──
+const navArea = document.getElementById('nav-user-area')
+if (Auth.isLoggedIn()) {
+  const user = Auth.getUser()
+  const initials = user?.username?.slice(0,2).toUpperCase() || 'MS'
+  navArea.innerHTML = `<a href="profile.html" style="display:flex;align-items:center;gap:8px;padding:5px 14px 5px 6px;border-radius:8px;background:var(--bg3);border:1px solid var(--border);color:var(--text);font-size:13px;text-decoration:none;"><div style="width:28px;height:28px;border-radius:50%;background:linear-gradient(135deg,#f59e0b,#ef4444);display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;color:#fff;">${initials}</div>我的</a>`
+} else {
+  navArea.innerHTML = `<a href="login.html" style="display:flex;align-items:center;gap:6px;padding:7px 16px;border-radius:8px;background:var(--accent);color:#fff;font-size:13px;font-weight:600;text-decoration:none;">登录</a>`
+}
+
+// ── HLS 播放器 ──
+const video = document.getElementById('player')
+const m3u8 = 'http://localhost:8080/hls/output.m3u8'
+if (Hls.isSupported()) {
+  const hls = new Hls()
+  hls.loadSource(m3u8)
+  hls.attachMedia(video)
+  hls.on(Hls.Events.MANIFEST_PARSED, () => video.play())
+}
+
+// ── 选集 ──
+const epGrid = document.getElementById('ep-grid')
+for (let i = 1; i <= 10; i++) {
+  const btn = document.createElement('button')
+  btn.className = 'ep-btn' + (i === 1 ? ' active' : '')
+  btn.textContent = `第${i}集`
+  btn.onclick = () => {
+    document.querySelectorAll('.ep-btn').forEach(b => b.classList.remove('active'))
+    btn.classList.add('active')
+  }
+  epGrid.appendChild(btn)
+}
+
+// ── 线路切换 ──
+document.querySelectorAll('.source-btn').forEach(btn => {
+  btn.addEventListener('click', () => {
+    document.querySelectorAll('.source-btn').forEach(b => b.classList.remove('active'))
+    btn.classList.add('active')
+  })
+})
+
+// ── 简介展开 ──
+let expanded = false
+function toggleDesc() {
+  const desc = document.getElementById('desc')
+  const toggle = document.querySelector('.desc-toggle')
+  expanded = !expanded
+  desc.classList.toggle('collapsed', !expanded)
+  toggle.textContent = expanded ? '收起简介 ▲' : '展开简介 ▼'
+}
+
+// ════════════════════════════════
+// ── 弹幕系统 ──
+// ════════════════════════════════
+const canvas = document.getElementById('danmaku-canvas')
+const ctx = canvas.getContext('2d')
+const VIDEO_ID = 1  // 实际项目从URL参数读取
+let danmakuEnabled = true
+let danmakuOpacity = 0.8
+let ws = null
+let danmakuTracks = []  // 弹幕轨道
+const TRACK_COUNT = 12  // 轨道数量
+const dmListEl = document.getElementById('dm-list')
+let allDanmaku = []     // 所有弹幕数据
+let activeDanmaku = []  // 当前屏幕上的弹幕
+
+// 初始化画布尺寸
+function resizeCanvas() {
+  const wrap = canvas.parentElement
+  canvas.width = wrap.clientWidth
+  canvas.height = wrap.clientHeight
+  // 重新计算轨道
+  danmakuTracks = Array.from({length: TRACK_COUNT}, (_, i) => ({
+    y: 30 + i * (canvas.height / TRACK_COUNT),
+    busy: false,
+    busyUntil: 0
+  }))
+}
+resizeCanvas()
+window.addEventListener('resize', resizeCanvas)
+
+// 连接 WebSocket
+function connectWS() {
+  ws = new WebSocket(`ws://localhost:8000/api/danmaku/ws/${VIDEO_ID}`)
+
+  ws.onopen = () => {
+    console.log('[弹幕] WebSocket 连接成功')
+    // 心跳
+    setInterval(() => {
+      if (ws.readyState === WebSocket.OPEN) {
+        ws.send(JSON.stringify({type: 'ping'}))
+      }
+    }, 30000)
   }
 
-  // HLS 播放器
-  const video = document.getElementById('player');
-  const statusEl = document.getElementById('player-status');
-  const m3u8 = 'http://localhost:8080/hls/output.m3u8';
+  ws.onmessage = (e) => {
+    const data = JSON.parse(e.data)
 
-  if (Hls.isSupported()) {
-    const hls = new Hls();
-    hls.loadSource(m3u8);
-    hls.attachMedia(video);
-    hls.on(Hls.Events.MANIFEST_PARSED, () => {
-      statusEl.textContent = '✅ 播放列表加载成功';
-      setTimeout(() => statusEl.style.display = 'none', 2000);
-      video.play();
-    });
-    hls.on(Hls.Events.ERROR, (e, data) => {
-      if (data.fatal) statusEl.textContent = '视频加载中，请稍候...';
-    });
-  } else if (video.canPlayType('application/vnd.apple.mpegurl')) {
-    video.src = m3u8;
+    if (data.type === 'history') {
+      // 历史弹幕
+      allDanmaku = data.data || []
+      updateDmList()
+      document.getElementById('dm-count').textContent = `共 ${allDanmaku.length} 条`
+    }
+
+    if (data.type === 'danmaku') {
+      // 实时弹幕
+      allDanmaku.push(data)
+      document.getElementById('dm-count').textContent = `共 ${allDanmaku.length} 条`
+      updateDmList()
+
+      // 如果视频正在播放，立即显示
+      if (!video.paused) {
+        spawnDanmaku(data.content, data.color || '#ffffff')
+      }
+    }
   }
 
-  // 线路切换
-  document.querySelectorAll('.source-btn').forEach(btn => {
-    btn.addEventListener('click', () => {
-      document.querySelectorAll('.source-btn').forEach(b => b.classList.remove('active'));
-      btn.classList.add('active');
-    });
-  });
-
-  // 简介展开
-  let expanded = false;
-  function toggleDesc() {
-    const desc = document.getElementById('desc');
-    const toggle = document.querySelector('.desc-toggle');
-    expanded = !expanded;
-    desc.classList.toggle('collapsed', !expanded);
-    toggle.textContent = expanded ? '收起简介 ▲' : '展开简介 ▼';
+  ws.onclose = () => {
+    console.log('[弹幕] 连接断开，3秒后重连')
+    setTimeout(connectWS, 3000)
   }
+
+  ws.onerror = (err) => {
+    console.error('[弹幕] 连接错误', err)
+  }
+}
+connectWS()
+
+// 根据视频时间显示历史弹幕
+video.addEventListener('timeupdate', () => {
+  const currentTime = video.currentTime
+  const speed = parseInt(document.getElementById('dm-speed').value)
+
+  allDanmaku.forEach(dm => {
+    const diff = currentTime - dm.time_point
+    if (diff >= 0 && diff < 0.5) {  // 在当前时间点附近
+      // 避免重复显示
+      if (!activeDanmaku.find(a => a.id === dm.id)) {
+        spawnDanmaku(dm.content, dm.color || '#ffffff', dm.id)
+      }
+    }
+  })
+})
+
+// 生成一条弹幕
+function spawnDanmaku(text, color = '#ffffff', id = null) {
+  if (!danmakuEnabled) return
+
+  const speed = parseInt(document.getElementById('dm-speed').value)
+
+  // 找空闲轨道
+  const now = Date.now()
+  let track = danmakuTracks.find(t => !t.busy || t.busyUntil < now)
+  if (!track) track = danmakuTracks[Math.floor(Math.random() * TRACK_COUNT)]
+
+  const fontSize = 20
+  ctx.font = `${fontSize}px Noto Sans SC, sans-serif`
+  const textWidth = ctx.measureText(text).width
+  const duration = (canvas.width + textWidth) / (speed * 80) * 1000
+
+  track.busy = true
+  track.busyUntil = now + duration * 0.4
+
+  const dm = {
+    id: id || Date.now(),
+    text,
+    color,
+    x: canvas.width + 10,
+    y: track.y,
+    speed: speed * 80,
+    width: textWidth,
+    fontSize,
+    opacity: danmakuOpacity
+  }
+
+  activeDanmaku.push(dm)
+}
+
+// Canvas 渲染循环
+let lastTime = 0
+function renderLoop(timestamp) {
+  const delta = (timestamp - lastTime) / 1000
+  lastTime = timestamp
+
+  ctx.clearRect(0, 0, canvas.width, canvas.height)
+
+  if (danmakuEnabled) {
+    ctx.save()
+    ctx.globalAlpha = danmakuOpacity
+
+    activeDanmaku = activeDanmaku.filter(dm => {
+      dm.x -= dm.speed * delta
+      if (dm.x + dm.width < 0) return false  // 移出屏幕
+
+      ctx.font = `${dm.fontSize}px Noto Sans SC, sans-serif`
+      // 描边（黑色阴影让文字更清晰）
+      ctx.strokeStyle = 'rgba(0,0,0,0.8)'
+      ctx.lineWidth = 3
+      ctx.strokeText(dm.text, dm.x, dm.y)
+      // 正文
+      ctx.fillStyle = dm.color
+      ctx.fillText(dm.text, dm.x, dm.y)
+      return true
+    })
+
+    ctx.restore()
+  }
+
+  requestAnimationFrame(renderLoop)
+}
+requestAnimationFrame(renderLoop)
+
+// 更新弹幕列表
+function updateDmList() {
+  const recent = [...allDanmaku].reverse().slice(0, 50)
+  dmListEl.innerHTML = recent.map(dm => `
+    <div class="dm-item">
+      <span class="dm-time">${formatTime(dm.time_point)}</span>
+      <span class="dm-user" style="color:${dm.color||'#fff'}">${dm.username || '匿名'}</span>
+      <span class="dm-content">${dm.content}</span>
+    </div>
+  `).join('')
+  dmListEl.scrollTop = dmListEl.scrollHeight
+}
+
+function formatTime(sec) {
+  const m = Math.floor(sec / 60).toString().padStart(2,'0')
+  const s = Math.floor(sec % 60).toString().padStart(2,'0')
+  return `${m}:${s}`
+}
+
+// 发送弹幕
+function sendDanmaku() {
+  const input = document.getElementById('dm-input')
+  const color = document.getElementById('dm-color').value
+  const content = input.value.trim()
+
+  if (!content) return
+  if (!ws || ws.readyState !== WebSocket.OPEN) {
+    alert('弹幕连接中，请稍候...')
+    return
+  }
+
+  const user = Auth.getUser()
+  ws.send(JSON.stringify({
+    type: 'danmaku',
+    content,
+    time_point: video.currentTime,
+    color,
+    dm_type: 0,
+    username: user?.username || '匿名'
+  }))
+
+  // 立即在本地显示
+  spawnDanmaku(content, color)
+  input.value = ''
+}
+
+// 回车发送
+document.getElementById('dm-input').addEventListener('keydown', e => {
+  if (e.key === 'Enter') sendDanmaku()
+})
+
+// 弹幕开关
+function toggleDanmaku() {
+  danmakuEnabled = !danmakuEnabled
+  const btn = document.getElementById('dm-toggle')
+  btn.textContent = danmakuEnabled ? '弹幕开' : '弹幕关'
+  btn.classList.toggle('active', danmakuEnabled)
+  if (!danmakuEnabled) {
+    ctx.clearRect(0, 0, canvas.width, canvas.height)
+    activeDanmaku = []
+  }
+}
+
+// 透明度
+function setOpacity(val) {
+  danmakuOpacity = val / 100
+}
+
+// 在线人数（模拟）
+let onlineCount = 1
+setInterval(() => {
+  onlineCount = Math.max(1, onlineCount + Math.floor(Math.random() * 3) - 1)
+  document.getElementById('online-count').textContent = onlineCount
+}, 5000)
 </script>
 </body>
-<script src="search.js"></script>
 </html>

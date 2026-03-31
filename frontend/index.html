@@ -168,7 +168,7 @@
 <script>
 (function(){
   const area = document.getElementById('nav-user-area');
-  const loggedIn = sessionStorage.getItem('ms_logged_in') === '1';
+  const loggedIn = !!localStorage.getItem('ms_token');
   if (loggedIn) {
     area.innerHTML = `<a href="profile.html" class="nav-user-btn"><div class="nav-user-avatar">MS</div>我的</a>`;
   } else {
@@ -455,4 +455,5 @@
   });
 </script>
 </body>
+<script src="api.js"></script>
 </html>

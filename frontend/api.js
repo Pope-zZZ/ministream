@@ -68,10 +68,15 @@ const Auth = {
 
 // ── 视频相关 ──
 const VideoAPI = {
-  // 获取视频列表
+  // 获取视频列表（支持关键词搜索）
   async getList(params = {}) {
     const query = new URLSearchParams(params).toString()
     return request(`/api/videos/?${query}`)
+  },
+
+  // 搜索视频
+  async search(keyword) {
+    return this.getList({ keyword })
   },
 
   // 获取单个视频

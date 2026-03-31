@@ -9,15 +9,12 @@ from app.schemas.video import VideoCreate, VideoOut
 
 router = APIRouter(prefix="/videos", tags=["视频"])
 
-# 存储路径
 UPLOAD_DIR = "D:/ministream/storage/uploads"
 HLS_DIR    = "D:/ministream/storage/hls"
 
 def convert_to_hls(input_path: str, output_dir: str) -> str:
-    """调用FFmpeg把视频转成HLS格式"""
     os.makedirs(output_dir, exist_ok=True)
     output_m3u8 = os.path.join(output_dir, "index.m3u8")
-
     cmd = [
         "ffmpeg", "-i", input_path,
         "-codec", "copy",
@@ -42,16 +39,12 @@ async def upload_video(
     file:        UploadFile = File(...),
     db:          Session = Depends(get_db)
 ):
-    # 生成唯一ID
     video_id = str(uuid.uuid4())
-
-    # 保存原始文件
     ext = os.path.splitext(file.filename)[1]
     upload_path = os.path.join(UPLOAD_DIR, f"{video_id}{ext}")
     with open(upload_path, "wb") as f:
         shutil.copyfileobj(file.file, f)
 
-    # 创建数据库记录（先标记为处理中）
     video = Video(
         title=title,
         description=description,
@@ -66,7 +59,6 @@ async def upload_video(
     db.commit()
     db.refresh(video)
 
-    # 转码
     try:
         hls_output_dir = os.path.join(HLS_DIR, str(video.id))
         m3u8_path = convert_to_hls(upload_path, hls_output_dir)
@@ -85,17 +77,20 @@ async def upload_video(
 def get_videos(
     category: Optional[str] = None,
     genre:    Optional[str] = None,
+    keyword:  Optional[str] = None,
     page:     int = 1,
     limit:    int = 24,
     db:       Session = Depends(get_db)
 ):
     query = db.query(Video).filter(Video.status == VideoStatus.ready)
+
     if category:
         query = query.filter(Video.category == category)
     if genre:
         query = query.filter(Video.genre == genre)
+    if keyword:
+        query = query.filter(Video.title.contains(keyword))
 
-    total = query.count()
     videos = query.order_by(Video.created_at.desc())\
                   .offset((page - 1) * limit)\
                   .limit(limit).all()
@@ -107,8 +102,6 @@ def get_video(video_id: int, db: Session = Depends(get_db)):
     video = db.query(Video).filter(Video.id == video_id).first()
     if not video:
         raise HTTPException(status_code=404, detail="视频不存在")
-
-    # 播放次数+1
     video.views += 1
     db.commit()
     db.refresh(video)
@@ -121,7 +114,6 @@ def delete_video(video_id: int, db: Session = Depends(get_db)):
     if not video:
         raise HTTPException(status_code=404, detail="视频不存在")
 
-    # 删除文件
     if video.original_path and os.path.exists(video.original_path):
         os.remove(video.original_path)
     hls_dir = os.path.join(HLS_DIR, str(video_id))

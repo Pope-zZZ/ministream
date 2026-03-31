@@ -1,0 +1,458 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>MiniStream · 高清动漫在线观看</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+SC:wght@300;400;500;700&family=Bebas+Neue&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="common.css">
+  <style>
+    /* HERO */
+    .hero { position: relative; height: 460px; overflow: hidden; margin-bottom: 48px; }
+    .hero-slides { position: relative; width: 100%; height: 100%; }
+    .hero-slide { position: absolute; inset: 0; opacity: 0; transition: opacity 0.8s ease; }
+    .hero-slide.active { opacity: 1; }
+    .hero-bg { width: 100%; height: 100%; object-fit: cover; filter: brightness(0.35); }
+    .hero-gradient {
+      position: absolute; inset: 0;
+      background: linear-gradient(to right, rgba(10,10,15,0.96) 0%, rgba(10,10,15,0.65) 45%, transparent 75%),
+                  linear-gradient(to top, rgba(10,10,15,1) 0%, transparent 45%);
+    }
+    .hero-content {
+      position: absolute; bottom: 60px; left: 64px; max-width: 480px;
+      animation: fadeUp 0.6s ease;
+    }
+    @keyframes fadeUp { from { opacity:0; transform:translateY(16px); } to { opacity:1; transform:translateY(0); } }
+    .hero-tags { display: flex; gap: 8px; margin-bottom: 14px; }
+    .hero-tag {
+      font-size: 11px; font-weight: 600; padding: 3px 10px; border-radius: 4px;
+      background: var(--accent); color: #fff; letter-spacing: 0.5px;
+    }
+    .hero-tag.outline { background: transparent; border: 1px solid rgba(255,255,255,0.25); color: var(--text2); }
+    .hero-title { font-size: 36px; font-weight: 700; line-height: 1.2; margin-bottom: 12px; text-shadow: 0 2px 12px rgba(0,0,0,0.6); }
+    .hero-desc { font-size: 13px; color: var(--text2); line-height: 1.7; margin-bottom: 24px;
+      display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; overflow: hidden; }
+    .hero-actions { display: flex; gap: 12px; }
+    .btn-primary {
+      display: flex; align-items: center; gap: 8px;
+      background: var(--accent); color: #fff; border: none;
+      padding: 10px 22px; border-radius: 8px; font-size: 14px; font-weight: 600;
+      cursor: pointer; font-family: inherit; transition: all 0.2s; text-decoration: none;
+    }
+    .btn-primary:hover { background: var(--accent2); transform: translateY(-1px); }
+    .btn-secondary {
+      display: flex; align-items: center; gap: 8px;
+      background: rgba(255,255,255,0.08); color: var(--text);
+      border: 1px solid rgba(255,255,255,0.15);
+      padding: 10px 22px; border-radius: 8px; font-size: 14px; font-weight: 500;
+      cursor: pointer; font-family: inherit; transition: all 0.2s; text-decoration: none; backdrop-filter: blur(8px);
+    }
+    .btn-secondary:hover { background: rgba(255,255,255,0.14); }
+    .hero-dots { position: absolute; bottom: 20px; left: 64px; display: flex; gap: 6px; }
+    .hero-dot { width: 6px; height: 6px; border-radius: 3px; background: var(--text3); cursor: pointer; transition: all 0.3s; }
+    .hero-dot.active { width: 24px; background: var(--accent); }
+
+    /* SECTIONS */
+    .section { padding: 0 32px; margin-bottom: 48px; }
+    .section-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 20px; }
+    .section-title { display: flex; align-items: center; gap: 10px; font-size: 18px; font-weight: 700; }
+    .section-title::before { content:''; display:block; width:4px; height:20px; background:var(--accent); border-radius:2px; }
+    .section-more { font-size: 13px; color: var(--text3); text-decoration: none; display: flex; align-items: center; gap: 4px; transition: color 0.2s; }
+    .section-more:hover { color: var(--accent); }
+
+    /* WEEKDAY */
+    .weekday-tabs { display:flex; gap:4px; margin-bottom:20px; border-bottom:1px solid var(--border); }
+    .weekday-tab { padding:8px 18px; font-size:13px; font-weight:500; color:var(--text2); cursor:pointer; border-bottom:2px solid transparent; margin-bottom:-1px; transition:all 0.2s; }
+    .weekday-tab:hover { color: var(--text); }
+    .weekday-tab.active { color: var(--accent); border-bottom-color: var(--accent); }
+
+    /* SCROLL ROW */
+    .scroll-row { display:flex; gap:16px; overflow-x:auto; padding-bottom:8px; scrollbar-width:none; }
+    .scroll-row::-webkit-scrollbar { display:none; }
+    .scroll-row .anime-card { flex: 0 0 160px; }
+
+    /* GRID */
+    .card-grid { display:grid; grid-template-columns:repeat(auto-fill, minmax(180px,1fr)); gap:16px; }
+
+    /* RANKING */
+    .rank-list { display:grid; grid-template-columns:repeat(auto-fill, minmax(280px,1fr)); gap:10px; }
+    .rank-item {
+      display:flex; align-items:center; gap:14px; padding:10px 14px;
+      border-radius:10px; background:var(--bg2); border:1px solid var(--border);
+      cursor:pointer; transition:all 0.2s; text-decoration:none; color:inherit;
+    }
+    .rank-item:hover { background:var(--card-hover); border-color:var(--accent); }
+    .rank-num { font-family:'Bebas Neue',sans-serif; font-size:22px; color:var(--text3); width:28px; text-align:center; flex-shrink:0; }
+    .rank-item:nth-child(1) .rank-num { color:#f59e0b; }
+    .rank-item:nth-child(2) .rank-num { color:#9ca3af; }
+    .rank-item:nth-child(3) .rank-num { color:#b45309; }
+    .rank-thumb { width:52px; height:70px; border-radius:6px; object-fit:cover; flex-shrink:0; }
+    .rank-info { flex:1; min-width:0; }
+    .rank-title { font-size:13px; font-weight:500; margin-bottom:4px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+    .rank-sub { font-size:11px; color:var(--text3); }
+
+    /* NOTICE */
+    .notice {
+      background: linear-gradient(90deg, rgba(230,57,70,0.12), transparent);
+      border-left: 3px solid var(--accent);
+      padding: 10px 16px; margin: 0 32px 32px;
+      border-radius: 0 8px 8px 0;
+      font-size: 13px; color: var(--text2);
+      display: flex; align-items: center; gap: 10px;
+    }
+
+    /* CATEGORY QUICK LINKS */
+    .quick-links { display:flex; gap:10px; flex-wrap:wrap; }
+    .quick-link {
+      padding: 7px 16px; border-radius: 20px;
+      background: var(--bg3); border: 1px solid var(--border);
+      font-size: 13px; color: var(--text2); text-decoration: none;
+      transition: all 0.2s;
+    }
+    .quick-link:hover { border-color: var(--accent); color: var(--accent); }
+
+    @media(max-width:768px) {
+      .hero-content { left:20px; bottom:40px; }
+      .hero-title { font-size:24px; }
+      .section { padding: 0 16px; }
+      .notice { margin: 0 16px 24px; }
+    }
+  </style>
+</head>
+<body>
+
+<nav>
+  <a href="index.html" class="logo">Mini<span>Stream</span></a>
+  <ul class="nav-links">
+    <li><a href="index.html" class="active">首页</a></li>
+    <li><a href="show-anime.html">日番</a></li>
+    <li><a href="show-movie.html">剧场版</a></li>
+    <li><a href="show-anime.html?filter=end">完结</a></li>
+    <li><a href="show-anime.html?sort=hits">排行榜</a></li>
+  </ul>
+  <div style="display:flex;align-items:center;gap:10px;">
+    <div class="nav-search">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
+      <input type="text" placeholder="搜索动漫...">
+    </div>
+    <div id="nav-user-area"></div>
+  </div>
+</nav>
+<style>
+.nav-login-btn {
+  display:flex; align-items:center; gap:6px;
+  padding:7px 16px; border-radius:8px;
+  background:var(--accent); color:#fff;
+  font-size:13px; font-weight:600;
+  text-decoration:none; white-space:nowrap;
+  transition:all 0.2s; flex-shrink:0;
+}
+.nav-login-btn:hover { background:var(--accent2); transform:translateY(-1px); }
+.nav-user-btn {
+  display:flex; align-items:center; gap:8px;
+  padding:5px 14px 5px 6px; border-radius:8px;
+  background:var(--bg3); border:1px solid var(--border);
+  color:var(--text); font-size:13px; font-weight:500;
+  text-decoration:none; white-space:nowrap;
+  transition:all 0.2s; flex-shrink:0;
+}
+.nav-user-btn:hover { border-color:var(--accent); color:var(--accent); }
+.nav-user-avatar {
+  width:28px; height:28px; border-radius:50%;
+  background:linear-gradient(135deg,#f59e0b,#ef4444);
+  display:flex; align-items:center; justify-content:center;
+  font-size:11px; font-weight:700; color:#fff; flex-shrink:0;
+}
+</style>
+<script>
+(function(){
+  const area = document.getElementById('nav-user-area');
+  const loggedIn = sessionStorage.getItem('ms_logged_in') === '1';
+  if (loggedIn) {
+    area.innerHTML = `<a href="profile.html" class="nav-user-btn"><div class="nav-user-avatar">MS</div>我的</a>`;
+  } else {
+    area.innerHTML = `<a href="login.html" class="nav-login-btn"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="8" r="4"/><path d="M20 21a8 8 0 1 0-16 0"/></svg>登录</a>`;
+  }
+})();
+</script>
+
+<!-- HERO -->
+<div class="hero">
+  <div class="hero-slides">
+    <div class="hero-slide active">
+      <img class="hero-bg" src="https://images.unsplash.com/photo-1578632767115-351597cf2477?w=1600&q=80" alt="">
+      <div class="hero-gradient"></div>
+      <div class="hero-content">
+        <div class="hero-tags">
+          <span class="hero-tag">新番</span>
+          <span class="hero-tag outline">PG-12</span>
+          <span class="hero-tag outline">奇幻</span>
+        </div>
+        <h1 class="hero-title">葬送的芙莉莲<br>第二季</h1>
+        <p class="hero-desc">在勇者欣梅尔一行人击败魔王之后的世界。精灵魔法使芙莉蓮踏上了「了解人类之心的旅程」，感人至深的奇幻巨作。</p>
+        <div class="hero-actions">
+          <a href="player.html" class="btn-primary">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><path d="M8 5v14l11-7z"/></svg>
+            立即播放
+          </a>
+          <a href="show-anime.html" class="btn-secondary">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 6h16M4 12h16M4 18h7"/></svg>
+            浏览更多
+          </a>
+        </div>
+      </div>
+    </div>
+    <div class="hero-slide">
+      <img class="hero-bg" src="https://images.unsplash.com/photo-1541701494587-cb58502866ab?w=1600&q=80" alt="">
+      <div class="hero-gradient"></div>
+      <div class="hero-content">
+        <div class="hero-tags">
+          <span class="hero-tag">热播</span>
+          <span class="hero-tag outline">PG-12</span>
+          <span class="hero-tag outline">动作</span>
+        </div>
+        <h1 class="hero-title">咒术回战<br>第三季</h1>
+        <p class="hero-desc">涩谷事变后，五条悟被封印，虎杖等人踏入死灭回游的残酷战场，守护世界的最终决战开幕。</p>
+        <div class="hero-actions">
+          <a href="player.html" class="btn-primary">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><path d="M8 5v14l11-7z"/></svg>
+            立即播放
+          </a>
+          <a href="show-anime.html" class="btn-secondary">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 6h16M4 12h16M4 18h7"/></svg>
+            浏览更多
+          </a>
+        </div>
+      </div>
+    </div>
+    <div class="hero-slide">
+      <img class="hero-bg" src="https://images.unsplash.com/photo-1614854262318-831574f15f1f?w=1600&q=80" alt="">
+      <div class="hero-gradient"></div>
+      <div class="hero-content">
+        <div class="hero-tags">
+          <span class="hero-tag">剧场版</span>
+          <span class="hero-tag outline">PG-12</span>
+          <span class="hero-tag outline">冒险</span>
+        </div>
+        <h1 class="hero-title">命运/奇异赝品</h1>
+        <p class="hero-desc">圣杯战争再度开启，魔法师与英雄从者在美国西部展开新一轮命运对决。</p>
+        <div class="hero-actions">
+          <a href="player.html" class="btn-primary">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><path d="M8 5v14l11-7z"/></svg>
+            立即播放
+          </a>
+          <a href="show-movie.html" class="btn-secondary">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 6h16M4 12h16M4 18h7"/></svg>
+            更多剧场版
+          </a>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div class="hero-dots">
+    <div class="hero-dot active" onclick="goSlide(0)"></div>
+    <div class="hero-dot" onclick="goSlide(1)"></div>
+    <div class="hero-dot" onclick="goSlide(2)"></div>
+  </div>
+</div>
+
+<!-- NOTICE -->
+<div class="notice">
+  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="var(--accent)" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M12 8v4m0 4h.01"/></svg>
+  本站所有内容仅供个人学习研究使用
+</div>
+
+<!-- 快速分类 -->
+<div class="section">
+  <div class="section-header">
+    <div class="section-title">快速分类</div>
+  </div>
+  <div class="quick-links">
+    <a href="show-anime.html?genre=action" class="quick-link">动作</a>
+    <a href="show-anime.html?genre=fantasy" class="quick-link">奇幻</a>
+    <a href="show-anime.html?genre=romance" class="quick-link">爱情</a>
+    <a href="show-anime.html?genre=comedy" class="quick-link">喜剧</a>
+    <a href="show-anime.html?genre=scifi" class="quick-link">科幻</a>
+    <a href="show-anime.html?genre=isekai" class="quick-link">异世界</a>
+    <a href="show-anime.html?genre=sports" class="quick-link">运动</a>
+    <a href="show-anime.html?genre=school" class="quick-link">校园</a>
+    <a href="show-anime.html?genre=daily" class="quick-link">日常</a>
+    <a href="show-movie.html" class="quick-link">🎬 剧场版</a>
+  </div>
+</div>
+
+<!-- 本周更新 -->
+<div class="section">
+  <div class="section-header">
+    <div class="section-title">本周更新</div>
+    <a href="show-anime.html" class="section-more">查看全部 →</a>
+  </div>
+  <div class="weekday-tabs">
+    <div class="weekday-tab active">周一</div>
+    <div class="weekday-tab">周二</div>
+    <div class="weekday-tab">周三</div>
+    <div class="weekday-tab">周四</div>
+    <div class="weekday-tab">周五</div>
+    <div class="weekday-tab">周六</div>
+    <div class="weekday-tab">周日</div>
+  </div>
+  <div class="scroll-row">
+    <a href="player.html" class="anime-card">
+      <div class="card-thumb">
+        <img src="https://images.unsplash.com/photo-1607604276583-eef5d176d035?w=300&q=70" alt="">
+        <div class="card-overlay"><div class="play-icon"><svg width="18" height="18" viewBox="0 0 24 24" fill="white"><path d="M8 5v14l11-7z"/></svg></div></div>
+        <span class="card-badge pg">PG-12</span>
+        <span class="card-ep">更新至10集</span>
+      </div>
+      <div class="card-info"><div class="card-title">葬送的芙莉莲 第二季</div><div class="card-meta">23:00 · 奇幻</div></div>
+    </a>
+    <a href="player.html" class="anime-card">
+      <div class="card-thumb">
+        <img src="https://images.unsplash.com/photo-1635805737707-575885ab0820?w=300&q=70" alt="">
+        <div class="card-overlay"><div class="play-icon"><svg width="18" height="18" viewBox="0 0 24 24" fill="white"><path d="M8 5v14l11-7z"/></svg></div></div>
+        <span class="card-badge pg">PG-12</span>
+        <span class="card-ep">更新至12集</span>
+      </div>
+      <div class="card-info"><div class="card-title">咒术回战 第三季</div><div class="card-meta">23:30 · 动作</div></div>
+    </a>
+    <a href="player.html" class="anime-card">
+      <div class="card-thumb">
+        <img src="https://images.unsplash.com/photo-1614854262318-831574f15f1f?w=300&q=70" alt="">
+        <div class="card-overlay"><div class="play-icon"><svg width="18" height="18" viewBox="0 0 24 24" fill="white"><path d="M8 5v14l11-7z"/></svg></div></div>
+        <span class="card-badge">新番</span>
+        <span class="card-ep">更新至03集</span>
+      </div>
+      <div class="card-info"><div class="card-title">勇者之屑</div><div class="card-meta">22:00 · 动作</div></div>
+    </a>
+    <a href="player.html" class="anime-card">
+      <div class="card-thumb">
+        <img src="https://images.unsplash.com/photo-1560762484-813fc97650a0?w=300&q=70" alt="">
+        <div class="card-overlay"><div class="play-icon"><svg width="18" height="18" viewBox="0 0 24 24" fill="white"><path d="M8 5v14l11-7z"/></svg></div></div>
+        <span class="card-badge r15">R-15</span>
+        <span class="card-ep">已完结</span>
+      </div>
+      <div class="card-info"><div class="card-title">魔都精兵的奴隶 第二季</div><div class="card-meta">22:30 · 动作</div></div>
+    </a>
+    <a href="player.html" class="anime-card">
+      <div class="card-thumb">
+        <img src="https://images.unsplash.com/photo-1534447677768-be436bb09401?w=300&q=70" alt="">
+        <div class="card-overlay"><div class="play-icon"><svg width="18" height="18" viewBox="0 0 24 24" fill="white"><path d="M8 5v14l11-7z"/></svg></div></div>
+        <span class="card-badge end">已完结</span>
+        <span class="card-ep">全13集</span>
+      </div>
+      <div class="card-info"><div class="card-title">【我推的孩子】第三季</div><div class="card-meta">22:00 · 剧情</div></div>
+    </a>
+    <a href="player.html" class="anime-card">
+      <div class="card-thumb">
+        <img src="https://images.unsplash.com/photo-1579546929518-9e396f3cc809?w=300&q=70" alt="">
+        <div class="card-overlay"><div class="play-icon"><svg width="18" height="18" viewBox="0 0 24 24" fill="white"><path d="M8 5v14l11-7z"/></svg></div></div>
+        <span class="card-badge pg">PG-12</span>
+        <span class="card-ep">更新至05集</span>
+      </div>
+      <div class="card-info"><div class="card-title">炎炎消防队 三之章</div><div class="card-meta">01:53 · 动作</div></div>
+    </a>
+    <a href="player.html" class="anime-card">
+      <div class="card-thumb">
+        <img src="https://images.unsplash.com/photo-1519638399535-1b036603ac77?w=300&q=70" alt="">
+        <div class="card-overlay"><div class="play-icon"><svg width="18" height="18" viewBox="0 0 24 24" fill="white"><path d="M8 5v14l11-7z"/></svg></div></div>
+        <span class="card-badge end">已完结</span>
+        <span class="card-ep">全12集</span>
+      </div>
+      <div class="card-info"><div class="card-title">相反的你和我</div><div class="card-meta">爱情 · 校园</div></div>
+    </a>
+  </div>
+</div>
+
+<!-- 最近热播 -->
+<div class="section">
+  <div class="section-header">
+    <div class="section-title">最近热播</div>
+    <a href="show-anime.html?sort=hits" class="section-more">查看全部 →</a>
+  </div>
+  <div class="card-grid">
+    <a href="player.html" class="anime-card"><div class="card-thumb"><img src="https://images.unsplash.com/photo-1604076913837-52ab5629fde9?w=400&q=70" alt=""><div class="card-overlay"><div class="play-icon"><svg width="18" height="18" viewBox="0 0 24 24" fill="white"><path d="M8 5v14l11-7z"/></svg></div></div><span class="card-badge pg">PG-12</span><span class="card-ep">已完结</span></div><div class="card-info"><div class="card-title">达尔文事变</div><div class="card-meta">科幻 · 剧情</div></div></a>
+    <a href="player.html" class="anime-card"><div class="card-thumb"><img src="https://images.unsplash.com/photo-1518173946687-a4c8892bbd9f?w=400&q=70" alt=""><div class="card-overlay"><div class="play-icon"><svg width="18" height="18" viewBox="0 0 24 24" fill="white"><path d="M8 5v14l11-7z"/></svg></div></div><span class="card-badge end">已完结</span><span class="card-ep">全13集</span></div><div class="card-info"><div class="card-title">异国日记</div><div class="card-meta">日常 · 剧情</div></div></a>
+    <a href="player.html" class="anime-card"><div class="card-thumb"><img src="https://images.unsplash.com/photo-1502472584811-0a2f2feb8968?w=400&q=70" alt=""><div class="card-overlay"><div class="play-icon"><svg width="18" height="18" viewBox="0 0 24 24" fill="white"><path d="M8 5v14l11-7z"/></svg></div></div><span class="card-badge pg">PG-12</span><span class="card-ep">更新至07集</span></div><div class="card-info"><div class="card-title">JOJO的奇妙冒险 飙马野郎</div><div class="card-meta">冒险 · 动作</div></div></a>
+    <a href="player.html" class="anime-card"><div class="card-thumb"><img src="https://images.unsplash.com/photo-1511367461989-f85a21fda167?w=400&q=70" alt=""><div class="card-overlay"><div class="play-icon"><svg width="18" height="18" viewBox="0 0 24 24" fill="white"><path d="M8 5v14l11-7z"/></svg></div></div><span class="card-badge pg">PG-12</span><span class="card-ep">已完结</span></div><div class="card-info"><div class="card-title">数码宝贝 BEATBREAK</div><div class="card-meta">冒险 · 成长</div></div></a>
+    <a href="player.html" class="anime-card"><div class="card-thumb"><img src="https://images.unsplash.com/photo-1614854262318-831574f15f1f?w=400&q=70" alt=""><div class="card-overlay"><div class="play-icon"><svg width="18" height="18" viewBox="0 0 24 24" fill="white"><path d="M8 5v14l11-7z"/></svg></div></div><span class="card-badge">新番</span><span class="card-ep">已完结</span></div><div class="card-info"><div class="card-title">命运/奇异赝品</div><div class="card-meta">奇幻 · 动作</div></div></a>
+    <a href="player.html" class="anime-card"><div class="card-thumb"><img src="https://images.unsplash.com/photo-1560762484-813fc97650a0?w=400&q=70" alt=""><div class="card-overlay"><div class="play-icon"><svg width="18" height="18" viewBox="0 0 24 24" fill="white"><path d="M8 5v14l11-7z"/></svg></div></div><span class="card-badge pg">PG-12</span><span class="card-ep">已完结</span></div><div class="card-info"><div class="card-title">地狱乐 第二季</div><div class="card-meta">动作 · 冒险</div></div></a>
+  </div>
+</div>
+
+<!-- 剧场版推荐 -->
+<div class="section">
+  <div class="section-header">
+    <div class="section-title">剧场版推荐</div>
+    <a href="show-movie.html" class="section-more">更多剧场版 →</a>
+  </div>
+  <div class="scroll-row">
+    <a href="player.html" class="anime-card">
+      <div class="card-thumb"><img src="https://images.unsplash.com/photo-1569701813229-33284b643e3c?w=300&q=70" alt=""><div class="card-overlay"><div class="play-icon"><svg width="18" height="18" viewBox="0 0 24 24" fill="white"><path d="M8 5v14l11-7z"/></svg></div></div><span class="card-badge">剧场版</span></div>
+      <div class="card-info"><div class="card-title">命运/奇异赝品</div><div class="card-meta">2026 · 奇幻</div></div>
+    </a>
+    <a href="player.html" class="anime-card">
+      <div class="card-thumb"><img src="https://images.unsplash.com/photo-1519125323398-675f0ddb6308?w=300&q=70" alt=""><div class="card-overlay"><div class="play-icon"><svg width="18" height="18" viewBox="0 0 24 24" fill="white"><path d="M8 5v14l11-7z"/></svg></div></div><span class="card-badge">剧场版</span></div>
+      <div class="card-info"><div class="card-title">枪神 史丹比特 完结篇</div><div class="card-meta">2026 · 动作</div></div>
+    </a>
+    <a href="player.html" class="anime-card">
+      <div class="card-thumb"><img src="https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=300&q=70" alt=""><div class="card-overlay"><div class="play-icon"><svg width="18" height="18" viewBox="0 0 24 24" fill="white"><path d="M8 5v14l11-7z"/></svg></div></div><span class="card-badge">剧场版</span></div>
+      <div class="card-info"><div class="card-title">DARK MOON 月之祭坛</div><div class="card-meta">2025 · 奇幻</div></div>
+    </a>
+    <a href="player.html" class="anime-card">
+      <div class="card-thumb"><img src="https://images.unsplash.com/photo-1465101162946-4377e57745c3?w=300&q=70" alt=""><div class="card-overlay"><div class="play-icon"><svg width="18" height="18" viewBox="0 0 24 24" fill="white"><path d="M8 5v14l11-7z"/></svg></div></div><span class="card-badge">剧场版</span></div>
+      <div class="card-info"><div class="card-title">黄金神威 最终章</div><div class="card-meta">2025 · 历史</div></div>
+    </a>
+    <a href="player.html" class="anime-card">
+      <div class="card-thumb"><img src="https://images.unsplash.com/photo-1451187580459-43490279c0fa?w=300&q=70" alt=""><div class="card-overlay"><div class="play-icon"><svg width="18" height="18" viewBox="0 0 24 24" fill="white"><path d="M8 5v14l11-7z"/></svg></div></div><span class="card-badge">剧场版</span></div>
+      <div class="card-info"><div class="card-title">地狱乐 剧场版</div><div class="card-meta">2025 · 动作</div></div>
+    </a>
+  </div>
+</div>
+
+<!-- 人气排行 -->
+<div class="section">
+  <div class="section-header">
+    <div class="section-title">人气排行</div>
+    <a href="show-anime.html?sort=hits" class="section-more">完整榜单 →</a>
+  </div>
+  <div class="rank-list">
+    <a href="player.html" class="rank-item"><div class="rank-num">1</div><img class="rank-thumb" src="https://images.unsplash.com/photo-1607604276583-eef5d176d035?w=100&q=70" alt=""><div class="rank-info"><div class="rank-title">葬送的芙莉莲 第二季</div><div class="rank-sub">奇幻 · 更新至10集</div></div></a>
+    <a href="player.html" class="rank-item"><div class="rank-num">2</div><img class="rank-thumb" src="https://images.unsplash.com/photo-1635805737707-575885ab0820?w=100&q=70" alt=""><div class="rank-info"><div class="rank-title">咒术回战 第三季</div><div class="rank-sub">动作 · 更新至12集</div></div></a>
+    <a href="player.html" class="rank-item"><div class="rank-num">3</div><img class="rank-thumb" src="https://images.unsplash.com/photo-1534447677768-be436bb09401?w=100&q=70" alt=""><div class="rank-info"><div class="rank-title">【我推的孩子】第三季</div><div class="rank-sub">剧情 · 更新至09集</div></div></a>
+    <a href="player.html" class="rank-item"><div class="rank-num">4</div><img class="rank-thumb" src="https://images.unsplash.com/photo-1614854262318-831574f15f1f?w=100&q=70" alt=""><div class="rank-info"><div class="rank-title">勇者之屑</div><div class="rank-sub">动作 · 更新至03集</div></div></a>
+    <a href="player.html" class="rank-item"><div class="rank-num">5</div><img class="rank-thumb" src="https://images.unsplash.com/photo-1560762484-813fc97650a0?w=100&q=70" alt=""><div class="rank-info"><div class="rank-title">地狱乐 第二季</div><div class="rank-sub">动作 · 已完结</div></div></a>
+    <a href="player.html" class="rank-item"><div class="rank-num">6</div><img class="rank-thumb" src="https://images.unsplash.com/photo-1579546929518-9e396f3cc809?w=100&q=70" alt=""><div class="rank-info"><div class="rank-title">炎炎消防队 三之章</div><div class="rank-sub">奇幻 · 更新至05集</div></div></a>
+  </div>
+</div>
+
+<footer>
+  <div class="footer-logo">MiniStream</div>
+  <div class="footer-links">
+    <a href="index.html">首页</a>
+    <a href="show-anime.html">日番</a>
+    <a href="show-movie.html">剧场版</a>
+  </div>
+  <div class="footer-text">© 2026 MiniStream · 仅供学习使用</div>
+</footer>
+
+<script>
+  let current = 0;
+  const slides = document.querySelectorAll('.hero-slide');
+  const dots = document.querySelectorAll('.hero-dot');
+  function goSlide(n) {
+    slides[current].classList.remove('active'); dots[current].classList.remove('active');
+    current = n;
+    slides[current].classList.add('active'); dots[current].classList.add('active');
+  }
+  setInterval(() => goSlide((current + 1) % slides.length), 5000);
+
+  document.querySelectorAll('.weekday-tab').forEach(tab => {
+    tab.addEventListener('click', () => {
+      document.querySelectorAll('.weekday-tab').forEach(t => t.classList.remove('active'));
+      tab.classList.add('active');
+    });
+  });
+</script>
+</body>
+</html>

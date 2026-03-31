@@ -1,0 +1,301 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>注册账号 · MiniStream</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+SC:wght@300;400;500;700&family=Bebas+Neue&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="common.css">
+  <style>
+    body { min-height: 100vh; display: flex; flex-direction: column; }
+
+    .auth-bg {
+      position: fixed; inset: 0; z-index: 0;
+      background: url('https://images.unsplash.com/photo-1541701494587-cb58502866ab?w=1600&q=60') center/cover no-repeat;
+      filter: brightness(0.15) blur(4px);
+    }
+
+    .auth-page {
+      flex: 1; display: flex; align-items: center; justify-content: center;
+      padding: 40px 16px; position: relative; z-index: 1;
+    }
+
+    .auth-card {
+      width: 100%; max-width: 420px;
+      background: rgba(17,17,24,0.92);
+      border: 1px solid var(--border); border-radius: 16px;
+      padding: 40px; backdrop-filter: blur(20px);
+      box-shadow: 0 24px 64px rgba(0,0,0,0.6);
+    }
+
+    .auth-logo { text-align:center; margin-bottom:28px; }
+    .auth-logo a { font-family:'Bebas Neue',sans-serif; font-size:32px; letter-spacing:3px; color:var(--accent); text-decoration:none; }
+    .auth-logo a span { color:var(--text); }
+    .auth-logo p { font-size:12px; color:var(--text3); margin-top:4px; }
+
+    .auth-tabs {
+      display:flex; gap:0; margin-bottom:28px;
+      background:var(--bg3); border-radius:8px; padding:4px;
+    }
+    .auth-tab {
+      flex:1; padding:8px; text-align:center; font-size:14px; font-weight:500;
+      color:var(--text2); border-radius:6px; cursor:pointer; transition:all 0.2s; text-decoration:none;
+    }
+    .auth-tab.active { background:var(--accent); color:#fff; }
+    .auth-tab:hover:not(.active) { color:var(--text); }
+
+    .form-group { margin-bottom:18px; }
+    .form-label { display:block; font-size:13px; color:var(--text2); margin-bottom:8px; }
+    .form-input {
+      width:100%; padding:12px 16px;
+      background:var(--bg3); border:1px solid var(--border);
+      border-radius:10px; color:var(--text); font-size:14px;
+      font-family:inherit; outline:none; transition:border-color 0.2s;
+    }
+    .form-input:focus { border-color:var(--accent); }
+    .form-input::placeholder { color:var(--text3); }
+    .form-input.error { border-color:#dc2626; }
+    .form-input.success { border-color:#059669; }
+
+    /* 密码强度 */
+    .password-strength { margin-top:8px; }
+    .strength-bar { display:flex; gap:4px; margin-bottom:4px; }
+    .strength-seg { flex:1; height:3px; border-radius:2px; background:var(--border); transition:background 0.3s; }
+    .strength-seg.weak { background:#dc2626; }
+    .strength-seg.medium { background:#f59e0b; }
+    .strength-seg.strong { background:#059669; }
+    .strength-text { font-size:11px; color:var(--text3); }
+
+    .captcha-row { display:flex; gap:10px; }
+    .captcha-row .form-input { flex:1; }
+    .captcha-img {
+      width:100px; height:44px; background:var(--bg3);
+      border:1px solid var(--border); border-radius:10px;
+      display:flex; align-items:center; justify-content:center;
+      font-family:'Bebas Neue',sans-serif; font-size:22px; letter-spacing:4px;
+      color:var(--text); cursor:pointer; flex-shrink:0; user-select:none; position:relative; overflow:hidden;
+    }
+    .captcha-img::before {
+      content:''; position:absolute; inset:0;
+      background:repeating-linear-gradient(45deg,transparent,transparent 3px,rgba(255,255,255,0.03) 3px,rgba(255,255,255,0.03) 6px);
+    }
+    .captcha-text { position:relative; z-index:1; transform:skewX(-5deg); text-shadow:1px 1px 0 var(--accent); }
+
+    /* 协议 */
+    .form-agreement {
+      display:flex; align-items:flex-start; gap:8px;
+      margin-bottom:24px; font-size:12px; color:var(--text3); cursor:pointer;
+    }
+    .form-agreement input { accent-color:var(--accent); margin-top:2px; flex-shrink:0; }
+    .form-agreement a { color:var(--accent); text-decoration:none; }
+    .form-agreement a:hover { text-decoration:underline; }
+
+    .btn-submit {
+      width:100%; padding:13px;
+      background:var(--accent); color:#fff; border:none;
+      border-radius:10px; font-size:15px; font-weight:600;
+      cursor:pointer; font-family:inherit; transition:all 0.2s; margin-bottom:20px;
+    }
+    .btn-submit:hover { background:var(--accent2); transform:translateY(-1px); }
+
+    .auth-footer { text-align:center; font-size:13px; color:var(--text3); }
+    .auth-footer a { color:var(--accent); text-decoration:none; }
+
+    .form-tip { font-size:11px; color:var(--text3); margin-top:6px; line-height:1.5; }
+
+    /* 注册步骤 */
+    .reg-steps {
+      display:flex; align-items:center; margin-bottom:28px; gap:0;
+    }
+    .reg-step {
+      flex:1; text-align:center; position:relative;
+    }
+    .reg-step-dot {
+      width:28px; height:28px; border-radius:50%;
+      background:var(--bg3); border:2px solid var(--border);
+      display:flex; align-items:center; justify-content:center;
+      font-size:12px; font-weight:600; color:var(--text3);
+      margin:0 auto 6px; transition:all 0.3s;
+    }
+    .reg-step.active .reg-step-dot { background:var(--accent); border-color:var(--accent); color:#fff; }
+    .reg-step.done .reg-step-dot { background:#059669; border-color:#059669; color:#fff; }
+    .reg-step-label { font-size:11px; color:var(--text3); }
+    .reg-step.active .reg-step-label { color:var(--accent); }
+    .reg-step-line {
+      position:absolute; top:14px; left:50%; width:100%;
+      height:2px; background:var(--border); z-index:0;
+    }
+    .reg-step:last-child .reg-step-line { display:none; }
+
+    footer { position:relative; z-index:1; }
+  </style>
+</head>
+<body>
+
+<div class="auth-bg"></div>
+
+<nav style="position:relative;z-index:101;">
+  <a href="index.html" class="logo">Mini<span>Stream</span></a>
+  <ul class="nav-links">
+    <li><a href="index.html">首页</a></li>
+    <li><a href="show-anime.html">日番</a></li>
+    <li><a href="show-movie.html">剧场版</a></li>
+  </ul>
+  <div class="nav-search">
+    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
+    <input type="text" placeholder="搜索动漫...">
+  </div>
+</nav>
+
+<div class="auth-page">
+  <div class="auth-card">
+
+    <div class="auth-logo">
+      <a href="index.html">Mini<span>Stream</span></a>
+      <p>加入我们，开启追番之旅</p>
+    </div>
+
+    <div class="auth-tabs">
+      <a href="login.html" class="auth-tab">用户登录</a>
+      <a href="register.html" class="auth-tab active">注册账号</a>
+    </div>
+
+    <div class="form-group">
+      <label class="form-label">输入账号名</label>
+      <input type="text" class="form-input" id="username" placeholder="4-16位字母、数字或下划线" oninput="checkUsername(this)">
+      <div class="form-tip" id="username-tip">账号名将作为您的唯一标识</div>
+    </div>
+
+    <div class="form-group">
+      <label class="form-label">输入密码</label>
+      <input type="password" class="form-input" id="password" placeholder="至少8位，包含字母和数字" oninput="checkPassword(this)">
+      <div class="password-strength" id="strength-bar" style="display:none">
+        <div class="strength-bar">
+          <div class="strength-seg" id="seg1"></div>
+          <div class="strength-seg" id="seg2"></div>
+          <div class="strength-seg" id="seg3"></div>
+        </div>
+        <div class="strength-text" id="strength-text"></div>
+      </div>
+    </div>
+
+    <div class="form-group">
+      <label class="form-label">输入确认密码</label>
+      <input type="password" class="form-input" id="confirm" placeholder="再次输入密码" oninput="checkConfirm(this)">
+      <div class="form-tip" id="confirm-tip"></div>
+    </div>
+
+    <div class="form-group">
+      <label class="form-label">输入验证码</label>
+      <div class="captcha-row">
+        <input type="text" class="form-input" placeholder="请输入验证码" maxlength="4">
+        <div class="captcha-img" onclick="refreshCaptcha()" title="点击刷新">
+          <span class="captcha-text" id="captcha-text">1178</span>
+        </div>
+      </div>
+    </div>
+
+    <label class="form-agreement">
+      <input type="checkbox" id="agree">
+      <span>我已阅读并同意 <a href="#">《用户服务协议》</a> 和 <a href="#">《隐私政策》</a></span>
+    </label>
+
+    <button class="btn-submit" onclick="doRegister()">注册账号</button>
+
+    <div class="auth-footer">
+      已有账号？<a href="login.html">返回登录页</a>
+    </div>
+
+  </div>
+</div>
+
+<footer style="position:relative;z-index:1;">
+  <div class="footer-logo">MiniStream</div>
+  <div class="footer-links">
+    <a href="index.html">首页</a>
+    <a href="show-anime.html">日番</a>
+    <a href="show-movie.html">剧场版</a>
+  </div>
+  <div class="footer-text">© 2026 MiniStream · 仅供学习使用</div>
+</footer>
+
+<script>
+  const chars = '0123456789ABCDEFGHJKLMNPQRSTUVWXYZ';
+  function genCaptcha() {
+    return Array.from({length:4}, () => chars[Math.floor(Math.random()*chars.length)]).join('');
+  }
+  function refreshCaptcha() {
+    document.getElementById('captcha-text').textContent = genCaptcha();
+  }
+
+  function checkUsername(el) {
+    const tip = document.getElementById('username-tip');
+    if (el.value.length === 0) {
+      el.className = 'form-input';
+      tip.textContent = '账号名将作为您的唯一标识';
+      tip.style.color = '';
+    } else if (el.value.length < 4) {
+      el.className = 'form-input error';
+      tip.textContent = '❌ 账号名至少4位';
+      tip.style.color = '#dc2626';
+    } else if (/^[a-zA-Z0-9_]+$/.test(el.value)) {
+      el.className = 'form-input success';
+      tip.textContent = '✅ 账号名可用';
+      tip.style.color = '#059669';
+    } else {
+      el.className = 'form-input error';
+      tip.textContent = '❌ 只能包含字母、数字和下划线';
+      tip.style.color = '#dc2626';
+    }
+  }
+
+  function checkPassword(el) {
+    const bar = document.getElementById('strength-bar');
+    const s1 = document.getElementById('seg1');
+    const s2 = document.getElementById('seg2');
+    const s3 = document.getElementById('seg3');
+    const txt = document.getElementById('strength-text');
+    const v = el.value;
+    if (!v) { bar.style.display = 'none'; return; }
+    bar.style.display = 'block';
+    let score = 0;
+    if (v.length >= 8) score++;
+    if (/[A-Za-z]/.test(v) && /[0-9]/.test(v)) score++;
+    if (/[^A-Za-z0-9]/.test(v) || v.length >= 12) score++;
+    [s1,s2,s3].forEach(s => s.className = 'strength-seg');
+    if (score === 1) { s1.classList.add('weak'); txt.textContent = '密码强度：弱'; txt.style.color = '#dc2626'; }
+    else if (score === 2) { s1.classList.add('medium'); s2.classList.add('medium'); txt.textContent = '密码强度：中'; txt.style.color = '#f59e0b'; }
+    else { s1.classList.add('strong'); s2.classList.add('strong'); s3.classList.add('strong'); txt.textContent = '密码强度：强'; txt.style.color = '#059669'; }
+  }
+
+  function checkConfirm(el) {
+    const pwd = document.getElementById('password').value;
+    const tip = document.getElementById('confirm-tip');
+    if (!el.value) { tip.textContent = ''; return; }
+    if (el.value === pwd) {
+      el.className = 'form-input success';
+      tip.textContent = '✅ 两次密码一致';
+      tip.style.color = '#059669';
+    } else {
+      el.className = 'form-input error';
+      tip.textContent = '❌ 两次密码不一致';
+      tip.style.color = '#dc2626';
+    }
+  }
+
+  function doRegister() {
+    if (!document.getElementById('agree').checked) {
+      alert('请先阅读并同意用户协议');
+      return;
+    }
+    const btn = document.querySelector('.btn-submit');
+    btn.textContent = '注册中...';
+    btn.disabled = true;
+    setTimeout(() => {
+      window.location.href = 'profile.html';
+    }, 900);
+  }
+</script>
+</body>
+</html>

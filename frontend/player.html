@@ -1,0 +1,298 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>葬送的芙莉莲 第二季 · MiniStream</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+SC:wght@300;400;500;700&family=Bebas+Neue&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="common.css">
+  <script src="https://cdn.jsdelivr.net/npm/hls.js@latest"></script>
+  <style>
+    .player-layout { display:flex; gap:24px; padding:24px 32px; align-items:flex-start; }
+
+    /* VIDEO AREA */
+    .video-area { flex:1; min-width:0; }
+    .breadcrumb { display:flex; align-items:center; gap:8px; font-size:13px; color:var(--text3); margin-bottom:16px; }
+    .breadcrumb a { color:var(--text3); text-decoration:none; transition:color 0.2s; }
+    .breadcrumb a:hover { color:var(--accent); }
+    .breadcrumb span { color:var(--text2); }
+
+    .video-wrapper {
+      position:relative; width:100%;
+      background:#000; border-radius:10px; overflow:hidden;
+      aspect-ratio:16/9; margin-bottom:20px;
+    }
+    #player { width:100%; height:100%; display:block; }
+    #player-status {
+      position:absolute; bottom:0; left:0; right:0;
+      background:linear-gradient(transparent, rgba(0,0,0,0.8));
+      padding:20px 16px 12px;
+      font-size:12px; color:rgba(255,255,255,0.7);
+      pointer-events:none;
+    }
+
+    /* ANIME INFO */
+    .anime-info { margin-bottom:24px; }
+    .anime-title { font-size:22px; font-weight:700; margin-bottom:8px; }
+    .anime-meta { display:flex; align-items:center; gap:12px; margin-bottom:12px; flex-wrap:wrap; }
+    .meta-tag {
+      font-size:11px; padding:3px 9px; border-radius:4px;
+      background:var(--bg3); border:1px solid var(--border); color:var(--text2);
+    }
+    .meta-tag.red { background:rgba(230,57,70,0.15); border-color:rgba(230,57,70,0.3); color:var(--accent); }
+    .anime-desc { font-size:13px; color:var(--text2); line-height:1.8; }
+    .anime-desc.collapsed { display:-webkit-box; -webkit-line-clamp:3; -webkit-box-orient:vertical; overflow:hidden; }
+    .desc-toggle { font-size:12px; color:var(--accent); cursor:pointer; margin-top:6px; display:inline-block; }
+
+    /* EPISODE LIST */
+    .ep-section { margin-bottom:24px; }
+    .ep-header { display:flex; align-items:center; justify-content:space-between; margin-bottom:12px; }
+    .ep-title { font-size:15px; font-weight:600; }
+    .ep-sort { font-size:12px; color:var(--text3); cursor:pointer; display:flex; align-items:center; gap:4px; }
+    .ep-grid { display:flex; flex-wrap:wrap; gap:8px; }
+    .ep-btn {
+      min-width:52px; padding:7px 12px; border-radius:7px;
+      background:var(--bg3); border:1px solid var(--border);
+      color:var(--text2); font-size:13px; cursor:pointer;
+      transition:all 0.2s; text-align:center;
+    }
+    .ep-btn:hover { border-color:var(--accent); color:var(--accent); }
+    .ep-btn.active { background:var(--accent); border-color:var(--accent); color:#fff; }
+
+    /* SOURCE SELECT */
+    .source-bar { display:flex; align-items:center; gap:10px; margin-bottom:20px; flex-wrap:wrap; }
+    .source-label { font-size:13px; color:var(--text3); }
+    .source-btn {
+      padding:5px 14px; border-radius:6px; font-size:12px;
+      background:var(--bg3); border:1px solid var(--border);
+      color:var(--text2); cursor:pointer; transition:all 0.2s;
+    }
+    .source-btn:hover { border-color:var(--accent); color:var(--accent); }
+    .source-btn.active { background:var(--accent); border-color:var(--accent); color:#fff; }
+
+    /* SIDEBAR */
+    .player-sidebar { width:280px; flex-shrink:0; }
+    .sidebar-section { margin-bottom:24px; }
+    .sidebar-title { font-size:14px; font-weight:600; margin-bottom:12px; display:flex; align-items:center; gap:8px; }
+    .sidebar-title::before { content:''; display:block; width:3px; height:16px; background:var(--accent); border-radius:2px; }
+
+    .related-card {
+      display:flex; gap:12px; padding:10px; border-radius:8px;
+      background:var(--bg2); border:1px solid var(--border);
+      margin-bottom:8px; cursor:pointer; transition:all 0.2s;
+      text-decoration:none; color:inherit;
+    }
+    .related-card:hover { background:var(--card-hover); border-color:var(--accent); }
+    .related-thumb { width:70px; height:92px; border-radius:6px; object-fit:cover; flex-shrink:0; }
+    .related-info { flex:1; min-width:0; }
+    .related-title { font-size:12px; font-weight:500; line-height:1.4; margin-bottom:4px;
+      display:-webkit-box; -webkit-line-clamp:2; -webkit-box-orient:vertical; overflow:hidden; }
+    .related-meta { font-size:11px; color:var(--text3); }
+    .related-ep { font-size:11px; color:var(--accent); margin-top:3px; }
+
+    @media(max-width:1024px) {
+      .player-layout { flex-direction:column; }
+      .player-sidebar { width:100%; }
+    }
+    @media(max-width:768px) {
+      .player-layout { padding:16px; }
+    }
+  </style>
+</head>
+<body>
+
+<nav>
+  <a href="index.html" class="logo">Mini<span>Stream</span></a>
+  <ul class="nav-links">
+    <li><a href="index.html">首页</a></li>
+    <li><a href="show-anime.html">日番</a></li>
+    <li><a href="show-movie.html">剧场版</a></li>
+    <li><a href="show-anime.html?filter=end">完结</a></li>
+    <li><a href="show-anime.html?sort=hits">排行榜</a></li>
+  </ul>
+  <div class="nav-search">
+    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
+    <input type="text" placeholder="搜索动漫...">
+  </div>
+</nav>
+
+<div class="player-layout">
+  <!-- VIDEO AREA -->
+  <div class="video-area">
+
+    <div class="breadcrumb">
+      <a href="index.html">首页</a>
+      <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m9 18 6-6-6-6"/></svg>
+      <a href="show-anime.html">日番</a>
+      <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m9 18 6-6-6-6"/></svg>
+      <span>葬送的芙莉莲 第二季</span>
+    </div>
+
+    <!-- 播放器 -->
+    <div class="video-wrapper">
+      <video id="player" controls autoplay muted playsinline></video>
+      <div id="player-status">正在加载...</div>
+    </div>
+
+    <!-- 线路选择 -->
+    <div class="source-bar">
+      <span class="source-label">播放线路：</span>
+      <button class="source-btn active">线路一</button>
+      <button class="source-btn">线路二</button>
+      <button class="source-btn">线路三</button>
+    </div>
+
+    <!-- 番剧信息 -->
+    <div class="anime-info">
+      <h1 class="anime-title">葬送的芙莉莲 第二季</h1>
+      <div class="anime-meta">
+        <span class="meta-tag red">更新至10集</span>
+        <span class="meta-tag">PG-12</span>
+        <span class="meta-tag">奇幻</span>
+        <span class="meta-tag">2026</span>
+        <span class="meta-tag">日语</span>
+        <span class="meta-tag">TV番</span>
+      </div>
+      <div class="anime-desc collapsed" id="desc">
+        在勇者欣梅尔一行人击败魔王之后的世界。与欣梅尔一同缔造和平、寿命长达千年以上的精灵魔法使芙莉蓮，在迎来寿终正寝的欣梅尔之死后，因那时流下的眼泪与心中的情感，芙莉蓮踏上了「了解人类之心的旅程」。第二季续写芙莉蓮与费伦、斯塔尔克一行人的冒险，面对更强大的挑战和更深刻的情感羁绊。
+      </div>
+      <span class="desc-toggle" onclick="toggleDesc()">展开简介 ▼</span>
+    </div>
+
+    <!-- 选集 -->
+    <div class="ep-section">
+      <div class="ep-header">
+        <div class="ep-title">选集</div>
+        <div class="ep-sort">
+          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 6h18M7 12h10M11 18h2"/></svg>
+          正序
+        </div>
+      </div>
+      <div class="ep-grid" id="ep-grid"></div>
+    </div>
+
+  </div>
+
+  <!-- SIDEBAR -->
+  <aside class="player-sidebar">
+    <div class="sidebar-section">
+      <div class="sidebar-title">相关推荐</div>
+      <a href="player.html" class="related-card">
+        <img class="related-thumb" src="https://images.unsplash.com/photo-1635805737707-575885ab0820?w=200&q=70" alt="">
+        <div class="related-info">
+          <div class="related-title">咒术回战 第三季</div>
+          <div class="related-meta">动作 · 奇幻</div>
+          <div class="related-ep">更新至12集</div>
+        </div>
+      </a>
+      <a href="player.html" class="related-card">
+        <img class="related-thumb" src="https://images.unsplash.com/photo-1534447677768-be436bb09401?w=200&q=70" alt="">
+        <div class="related-info">
+          <div class="related-title">【我推的孩子】第三季</div>
+          <div class="related-meta">剧情 · 偶像</div>
+          <div class="related-ep">已完结 · 13集</div>
+        </div>
+      </a>
+      <a href="player.html" class="related-card">
+        <img class="related-thumb" src="https://images.unsplash.com/photo-1614854262318-831574f15f1f?w=200&q=70" alt="">
+        <div class="related-info">
+          <div class="related-title">勇者之屑</div>
+          <div class="related-meta">动作 · 奇幻</div>
+          <div class="related-ep">更新至03集</div>
+        </div>
+      </a>
+      <a href="player.html" class="related-card">
+        <img class="related-thumb" src="https://images.unsplash.com/photo-1502472584811-0a2f2feb8968?w=200&q=70" alt="">
+        <div class="related-info">
+          <div class="related-title">JOJO的奇妙冒险 飙马野郎</div>
+          <div class="related-meta">冒险 · 动作</div>
+          <div class="related-ep">更新至07集</div>
+        </div>
+      </a>
+      <a href="player.html" class="related-card">
+        <img class="related-thumb" src="https://images.unsplash.com/photo-1560762484-813fc97650a0?w=200&q=70" alt="">
+        <div class="related-info">
+          <div class="related-title">地狱乐 第二季</div>
+          <div class="related-meta">动作 · 冒险</div>
+          <div class="related-ep">已完结 · 12集</div>
+        </div>
+      </a>
+      <a href="player.html" class="related-card">
+        <img class="related-thumb" src="https://images.unsplash.com/photo-1519638399535-1b036603ac77?w=200&q=70" alt="">
+        <div class="related-info">
+          <div class="related-title">相反的你和我</div>
+          <div class="related-meta">爱情 · 校园</div>
+          <div class="related-ep">已完结 · 12集</div>
+        </div>
+      </a>
+    </div>
+  </aside>
+
+</div>
+
+<footer>
+  <div class="footer-logo">MiniStream</div>
+  <div class="footer-links">
+    <a href="index.html">首页</a>
+    <a href="show-anime.html">日番</a>
+    <a href="show-movie.html">剧场版</a>
+  </div>
+  <div class="footer-text">© 2026 MiniStream · 仅供学习使用</div>
+</footer>
+
+<script>
+  // 生成选集按钮
+  const epGrid = document.getElementById('ep-grid');
+  for (let i = 1; i <= 10; i++) {
+    const btn = document.createElement('button');
+    btn.className = 'ep-btn' + (i === 1 ? ' active' : '');
+    btn.textContent = `第${i}集`;
+    btn.onclick = () => {
+      document.querySelectorAll('.ep-btn').forEach(b => b.classList.remove('active'));
+      btn.classList.add('active');
+    };
+    epGrid.appendChild(btn);
+  }
+
+  // HLS 播放器
+  const video = document.getElementById('player');
+  const statusEl = document.getElementById('player-status');
+  const m3u8 = 'http://localhost:8080/hls/output.m3u8';
+
+  if (Hls.isSupported()) {
+    const hls = new Hls();
+    hls.loadSource(m3u8);
+    hls.attachMedia(video);
+    hls.on(Hls.Events.MANIFEST_PARSED, () => {
+      statusEl.textContent = '✅ 播放列表加载成功';
+      setTimeout(() => statusEl.style.display = 'none', 2000);
+      video.play();
+    });
+    hls.on(Hls.Events.ERROR, (e, data) => {
+      if (data.fatal) statusEl.textContent = '视频加载中，请稍候...';
+    });
+  } else if (video.canPlayType('application/vnd.apple.mpegurl')) {
+    video.src = m3u8;
+  }
+
+  // 线路切换
+  document.querySelectorAll('.source-btn').forEach(btn => {
+    btn.addEventListener('click', () => {
+      document.querySelectorAll('.source-btn').forEach(b => b.classList.remove('active'));
+      btn.classList.add('active');
+    });
+  });
+
+  // 简介展开
+  let expanded = false;
+  function toggleDesc() {
+    const desc = document.getElementById('desc');
+    const toggle = document.querySelector('.desc-toggle');
+    expanded = !expanded;
+    desc.classList.toggle('collapsed', !expanded);
+    toggle.textContent = expanded ? '收起简介 ▲' : '展开简介 ▼';
+  }
+</script>
+</body>
+</html>

@@ -1,0 +1,381 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>用户中心 · MiniStream</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+SC:wght@300;400;500;700&family=Bebas+Neue&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="common.css">
+  <style>
+    .profile-hero {
+      position: relative; height: 200px;
+      background: linear-gradient(135deg, #1a0a0f 0%, #2a0d1a 40%, #0f0a1a 100%);
+      overflow: hidden;
+    }
+    .profile-hero::before {
+      content: ''; position: absolute; inset: 0;
+      background:
+        radial-gradient(ellipse 60% 80% at 20% 50%, rgba(230,57,70,0.22) 0%, transparent 70%),
+        radial-gradient(ellipse 40% 60% at 80% 30%, rgba(124,58,237,0.14) 0%, transparent 60%);
+    }
+    .profile-hero-grid {
+      position: absolute; inset: 0;
+      background-image: linear-gradient(rgba(255,255,255,0.025) 1px, transparent 1px),
+                        linear-gradient(90deg, rgba(255,255,255,0.025) 1px, transparent 1px);
+      background-size: 40px 40px;
+    }
+    .profile-hero-content {
+      position: absolute; bottom: 0; left: 0; right: 0;
+      padding: 0 32px; display: flex; align-items: flex-end; gap: 24px;
+    }
+    .avatar-wrap { position: relative; flex-shrink: 0; transform: translateY(32px); }
+    .avatar-ring {
+      width: 96px; height: 96px; border-radius: 50%;
+      background: linear-gradient(135deg, #f59e0b, #ef4444, #7c3aed);
+      padding: 3px; box-shadow: 0 8px 24px rgba(230,57,70,0.4);
+    }
+    .avatar-inner {
+      width: 100%; height: 100%; border-radius: 50%;
+      background: #1a1a24;
+      display: flex; align-items: center; justify-content: center;
+      font-family: 'Bebas Neue', sans-serif; font-size: 32px;
+      letter-spacing: 1px; color: var(--text); cursor: pointer; transition: all 0.2s;
+    }
+    .avatar-inner:hover { background: var(--bg3); }
+    .avatar-edit {
+      position: absolute; bottom: 2px; right: 2px;
+      width: 24px; height: 24px; border-radius: 50%;
+      background: var(--accent); border: 2px solid var(--bg);
+      display: flex; align-items: center; justify-content: center; cursor: pointer;
+    }
+    .hero-user-info { padding-bottom: 16px; flex: 1; }
+    .hero-username { font-size: 22px; font-weight: 700; margin-bottom: 4px; }
+    .hero-uid { font-size: 12px; color: var(--text3); }
+    .hero-badges { display: flex; gap: 8px; margin-top: 8px; }
+    .hero-badge {
+      font-size: 11px; padding: 2px 10px; border-radius: 20px;
+      background: rgba(230,57,70,0.15); border: 1px solid rgba(230,57,70,0.3); color: var(--accent);
+    }
+    .hero-badge.purple {
+      background: rgba(124,58,237,0.15); border-color: rgba(124,58,237,0.3); color: #a78bfa;
+    }
+
+    .stats-row {
+      display: flex; gap: 1px; background: var(--border);
+      border-top: 1px solid var(--border); overflow: hidden; margin-top: 32px;
+    }
+    .stat-item {
+      flex: 1; padding: 16px 0; text-align: center;
+      background: var(--bg2); transition: background 0.2s; cursor: pointer;
+    }
+    .stat-item:hover { background: var(--bg3); }
+    .stat-val { font-size: 22px; font-weight: 700; color: var(--text); }
+    .stat-val.accent { color: var(--accent); }
+    .stat-label { font-size: 11px; color: var(--text3); margin-top: 3px; }
+
+    .profile-layout {
+      display: flex; gap: 20px;
+      padding: 24px 32px; align-items: flex-start;
+      min-height: calc(100vh - 380px);
+    }
+
+    .profile-sidebar { width: 200px; flex-shrink: 0; position: sticky; top: 76px; }
+    .profile-nav { background: var(--bg2); border: 1px solid var(--border); border-radius: 12px; overflow: hidden; }
+    .profile-nav-item {
+      display: flex; align-items: center; gap: 10px;
+      padding: 13px 16px; font-size: 13px; color: var(--text2);
+      cursor: pointer; transition: all 0.2s; text-decoration: none;
+      border-left: 3px solid transparent; border-bottom: 1px solid var(--border);
+    }
+    .profile-nav-item:last-child { border-bottom: none; }
+    .profile-nav-item:hover { background: var(--bg3); color: var(--text); }
+    .profile-nav-item.active { background: rgba(230,57,70,0.08); color: var(--accent); border-left-color: var(--accent); }
+    .nav-badge { margin-left: auto; background: var(--accent); color: #fff; font-size: 10px; padding: 1px 6px; border-radius: 10px; }
+    .profile-nav-item.danger { color: #f87171; }
+    .profile-nav-item.danger:hover { background: rgba(220,38,38,0.08); color: #dc2626; }
+
+    .profile-main { flex: 1; min-width: 0; }
+
+    .p-card { background: var(--bg2); border: 1px solid var(--border); border-radius: 12px; margin-bottom: 16px; overflow: hidden; }
+    .p-card-header {
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 16px 20px; border-bottom: 1px solid var(--border);
+      background: rgba(255,255,255,0.01);
+    }
+    .p-card-title { font-size: 14px; font-weight: 600; display: flex; align-items: center; gap: 8px; }
+    .p-card-title-dot { width: 3px; height: 16px; background: var(--accent); border-radius: 2px; }
+    .p-card-action {
+      font-size: 12px; color: var(--text3); cursor: pointer;
+      display: flex; align-items: center; gap: 5px;
+      text-decoration: none; transition: all 0.2s; padding: 4px 10px;
+      border-radius: 6px; border: 1px solid var(--border);
+    }
+    .p-card-action:hover { color: var(--accent); border-color: var(--accent); }
+    .p-card-action.danger { color: #f87171; border-color: rgba(220,38,38,0.3); }
+    .p-card-action.danger:hover { color: #dc2626; border-color: #dc2626; background: rgba(220,38,38,0.05); }
+
+    .info-body { padding: 4px 0; }
+    .info-row {
+      display: grid; grid-template-columns: 100px 1fr auto;
+      align-items: center; gap: 16px; padding: 14px 20px;
+      border-bottom: 1px solid rgba(255,255,255,0.04); transition: background 0.15s;
+    }
+    .info-row:last-child { border-bottom: none; }
+    .info-row:hover { background: rgba(255,255,255,0.02); }
+    .info-key { font-size: 12px; color: var(--text3); }
+    .info-val { font-size: 13px; color: var(--text); }
+    .info-val.muted { color: var(--text3); font-style: italic; }
+    .info-val.accent { color: var(--accent); font-weight: 600; }
+    .info-val.code { font-family: monospace; font-size: 12px; color: var(--text3); }
+    .info-btn {
+      font-size: 12px; padding: 3px 12px; border-radius: 6px;
+      background: transparent; border: 1px solid var(--border);
+      color: var(--accent); cursor: pointer; transition: all 0.2s;
+      font-family: inherit; white-space: nowrap;
+    }
+    .info-btn:hover { background: rgba(230,57,70,0.1); border-color: var(--accent); }
+
+    .history-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(130px, 1fr)); gap: 14px; padding: 16px 20px; }
+
+    .fav-list { padding: 8px 16px 16px; }
+    .fav-item {
+      display: flex; align-items: center; gap: 14px; padding: 12px; border-radius: 10px;
+      background: var(--bg3); margin-bottom: 8px; cursor: pointer; transition: all 0.2s;
+      text-decoration: none; color: inherit; border: 1px solid transparent;
+    }
+    .fav-item:last-child { margin-bottom: 0; }
+    .fav-item:hover { background: var(--card-hover); border-color: rgba(230,57,70,0.3); }
+    .fav-thumb { width: 56px; height: 76px; border-radius: 6px; object-fit: cover; flex-shrink: 0; }
+    .fav-info { flex: 1; min-width: 0; }
+    .fav-title { font-size: 13px; font-weight: 500; margin-bottom: 4px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+    .fav-meta { font-size: 11px; color: var(--text3); }
+    .fav-ep { font-size: 11px; color: var(--accent); margin-top: 3px; }
+    .fav-del {
+      width: 28px; height: 28px; border-radius: 50%;
+      background: var(--bg2); border: 1px solid var(--border);
+      display: flex; align-items: center; justify-content: center;
+      cursor: pointer; flex-shrink: 0; transition: all 0.2s; color: var(--text3);
+    }
+    .fav-del:hover { background: #dc2626; border-color: #dc2626; color: #fff; }
+
+    .notice-list { padding: 4px 0; }
+    .notice-item {
+      display: flex; gap: 14px; align-items: flex-start;
+      padding: 14px 20px; border-bottom: 1px solid rgba(255,255,255,0.04); transition: background 0.15s;
+    }
+    .notice-item:last-child { border-bottom: none; }
+    .notice-item:hover { background: rgba(255,255,255,0.02); }
+    .notice-dot { width: 7px; height: 7px; border-radius: 50%; background: var(--accent); flex-shrink: 0; margin-top: 6px; }
+    .notice-dot.read { background: var(--border); }
+    .notice-icon { width: 34px; height: 34px; border-radius: 10px; flex-shrink: 0; display: flex; align-items: center; justify-content: center; font-size: 16px; }
+    .notice-icon.new { background: rgba(230,57,70,0.12); }
+    .notice-icon.read { background: var(--bg3); }
+    .notice-body { flex: 1; }
+    .notice-title { font-size: 13px; font-weight: 500; margin-bottom: 4px; line-height: 1.5; }
+    .notice-title.read { color: var(--text2); font-weight: 400; }
+    .notice-time { font-size: 11px; color: var(--text3); }
+
+    @media(max-width:900px) {
+      .profile-layout { flex-direction:column; padding:16px; }
+      .profile-sidebar { width:100%; position:static; }
+      .profile-hero-content { padding:0 16px; }
+    }
+  </style>
+</head>
+<body>
+
+<nav>
+  <a href="index.html" class="logo">Mini<span>Stream</span></a>
+  <ul class="nav-links">
+    <li><a href="index.html">首页</a></li>
+    <li><a href="show-anime.html">日番</a></li>
+    <li><a href="show-movie.html">剧场版</a></li>
+    <li><a href="show-anime.html?filter=end">完结</a></li>
+    <li><a href="show-anime.html?sort=hits">排行榜</a></li>
+  </ul>
+  <div style="display:flex;align-items:center;gap:10px;">
+    <div class="nav-search">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
+      <input type="text" placeholder="搜索动漫...">
+    </div>
+    <a href="login.html" id="nav-user-btn" style="display:flex;align-items:center;gap:6px;padding:7px 16px;border-radius:8px;background:var(--bg3);border:1px solid var(--border);color:var(--text2);font-size:13px;text-decoration:none;white-space:nowrap;transition:all 0.2s;">
+      <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
+      退出登录
+    </a>
+  </div>
+</nav>
+
+<!-- HERO -->
+<div class="profile-hero">
+  <div class="profile-hero-grid"></div>
+  <div class="profile-hero-content">
+    <div class="avatar-wrap">
+      <div class="avatar-ring">
+        <div class="avatar-inner">MS</div>
+      </div>
+      <div class="avatar-edit">
+        <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2.5"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4z"/></svg>
+      </div>
+    </div>
+    <div class="hero-user-info">
+      <div class="hero-username">80267470</div>
+      <div class="hero-uid">UID: 10086 · 注册于 2026-03-31</div>
+      <div class="hero-badges">
+        <span class="hero-badge">普通用户</span>
+        <span class="hero-badge purple">✦ 10 积分</span>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- STATS -->
+<div class="stats-row">
+  <div class="stat-item" onclick="switchTab('favorites',document.querySelector('[data-tab=favorites]'))">
+    <div class="stat-val accent">24</div><div class="stat-label">收藏</div>
+  </div>
+  <div class="stat-item" onclick="switchTab('history',document.querySelector('[data-tab=history]'))">
+    <div class="stat-val">168</div><div class="stat-label">观看</div>
+  </div>
+  <div class="stat-item">
+    <div class="stat-val">10</div><div class="stat-label">积分</div>
+  </div>
+  <div class="stat-item" onclick="switchTab('notice',document.querySelector('[data-tab=notice]'))">
+    <div class="stat-val accent">2</div><div class="stat-label">消息</div>
+  </div>
+</div>
+
+<div class="profile-layout">
+  <!-- SIDEBAR -->
+  <aside class="profile-sidebar">
+    <nav class="profile-nav">
+      <a href="#" class="profile-nav-item active" data-tab="info" onclick="switchTab('info',this)">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="8" r="4"/><path d="M20 21a8 8 0 1 0-16 0"/></svg>账号信息
+      </a>
+      <a href="#" class="profile-nav-item" data-tab="history" onclick="switchTab('history',this)">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/></svg>播放记录
+      </a>
+      <a href="#" class="profile-nav-item" data-tab="favorites" onclick="switchTab('favorites',this)">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m19 21-7-4-7 4V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z"/></svg>我的收藏
+      </a>
+      <a href="#" class="profile-nav-item" data-tab="notice" onclick="switchTab('notice',this)">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg>消息通知
+        <span class="nav-badge">2</span>
+      </a>
+      <a href="login.html" class="profile-nav-item danger">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>退出账号
+      </a>
+    </nav>
+  </aside>
+
+  <!-- MAIN -->
+  <main class="profile-main">
+
+    <!-- 账号信息 -->
+    <div id="tab-info" class="tab-content">
+      <div class="p-card">
+        <div class="p-card-header">
+          <div class="p-card-title"><div class="p-card-title-dot"></div>基本资料</div>
+          <a href="#" class="p-card-action"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4z"/></svg>修改资料</a>
+        </div>
+        <div class="info-body">
+          <div class="info-row"><div class="info-key">账号</div><div class="info-val">80267470</div><div></div></div>
+          <div class="info-row"><div class="info-key">昵称</div><div class="info-val muted">未设置</div><button class="info-btn">设置</button></div>
+          <div class="info-row"><div class="info-key">账户积分</div><div class="info-val accent">10 pts</div><div></div></div>
+          <div class="info-row"><div class="info-key">用户组</div><div class="info-val">普通用户</div><div></div></div>
+          <div class="info-row"><div class="info-key">邮箱</div><div class="info-val muted">未绑定</div><button class="info-btn">绑定</button></div>
+          <div class="info-row"><div class="info-key">注册时间</div><div class="info-val">2026-03-31 18:07:25</div><div></div></div>
+          <div class="info-row"><div class="info-key">上次登录</div><div class="info-val">2026-03-31 18:07:25</div><div></div></div>
+          <div class="info-row"><div class="info-key">登录 IP</div><div class="info-val code">91.149.239.128</div><div></div></div>
+        </div>
+      </div>
+      <div class="p-card">
+        <div class="p-card-header">
+          <div class="p-card-title"><div class="p-card-title-dot"></div>账号安全</div>
+        </div>
+        <div class="info-body">
+          <div class="info-row">
+            <div class="info-key">登录密码</div>
+            <div class="info-val" style="display:flex;align-items:center;gap:8px;"><span style="display:inline-block;width:8px;height:8px;border-radius:50%;background:#059669;"></span>已设置</div>
+            <button class="info-btn">修改</button>
+          </div>
+          <div class="info-row">
+            <div class="info-key">手机绑定</div>
+            <div class="info-val" style="display:flex;align-items:center;gap:8px;"><span style="display:inline-block;width:8px;height:8px;border-radius:50%;background:var(--text3);"></span><span class="muted">未绑定</span></div>
+            <button class="info-btn">绑定</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 播放记录 -->
+    <div id="tab-history" class="tab-content" style="display:none">
+      <div class="p-card">
+        <div class="p-card-header">
+          <div class="p-card-title"><div class="p-card-title-dot"></div>播放记录</div>
+          <a href="#" class="p-card-action danger"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/></svg>清空记录</a>
+        </div>
+        <div class="history-grid">
+          <a href="player.html" class="anime-card"><div class="card-thumb"><img src="https://images.unsplash.com/photo-1607604276583-eef5d176d035?w=300&q=70" alt=""><div class="card-overlay"><div class="play-icon"><svg width="18" height="18" viewBox="0 0 24 24" fill="white"><path d="M8 5v14l11-7z"/></svg></div></div><span class="card-ep">看到第10集</span></div><div class="card-info"><div class="card-title">葬送的芙莉莲 第二季</div><div class="card-meta">3小时前</div></div></a>
+          <a href="player.html" class="anime-card"><div class="card-thumb"><img src="https://images.unsplash.com/photo-1635805737707-575885ab0820?w=300&q=70" alt=""><div class="card-overlay"><div class="play-icon"><svg width="18" height="18" viewBox="0 0 24 24" fill="white"><path d="M8 5v14l11-7z"/></svg></div></div><span class="card-ep">看到第12集</span></div><div class="card-info"><div class="card-title">咒术回战 第三季</div><div class="card-meta">昨天</div></div></a>
+          <a href="player.html" class="anime-card"><div class="card-thumb"><img src="https://images.unsplash.com/photo-1534447677768-be436bb09401?w=300&q=70" alt=""><div class="card-overlay"><div class="play-icon"><svg width="18" height="18" viewBox="0 0 24 24" fill="white"><path d="M8 5v14l11-7z"/></svg></div></div><span class="card-ep">看到第09集</span></div><div class="card-info"><div class="card-title">【我推的孩子】第三季</div><div class="card-meta">2天前</div></div></a>
+          <a href="player.html" class="anime-card"><div class="card-thumb"><img src="https://images.unsplash.com/photo-1560762484-813fc97650a0?w=300&q=70" alt=""><div class="card-overlay"><div class="play-icon"><svg width="18" height="18" viewBox="0 0 24 24" fill="white"><path d="M8 5v14l11-7z"/></svg></div></div><span class="card-ep">已看完</span></div><div class="card-info"><div class="card-title">地狱乐 第二季</div><div class="card-meta">3天前</div></div></a>
+        </div>
+      </div>
+    </div>
+
+    <!-- 我的收藏 -->
+    <div id="tab-favorites" class="tab-content" style="display:none">
+      <div class="p-card">
+        <div class="p-card-header">
+          <div class="p-card-title"><div class="p-card-title-dot"></div>我的收藏</div>
+          <span style="font-size:12px;color:var(--text3);">共 4 部</span>
+        </div>
+        <div class="fav-list">
+          <a href="player.html" class="fav-item"><img class="fav-thumb" src="https://images.unsplash.com/photo-1607604276583-eef5d176d035?w=200&q=70" alt=""><div class="fav-info"><div class="fav-title">葬送的芙莉莲 第二季</div><div class="fav-meta">奇幻 · PG-12</div><div class="fav-ep">更新至10集</div></div><div class="fav-del" onclick="event.preventDefault();this.closest('.fav-item').style.opacity='0';setTimeout(()=>this.closest('.fav-item').remove(),200)"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></div></a>
+          <a href="player.html" class="fav-item"><img class="fav-thumb" src="https://images.unsplash.com/photo-1635805737707-575885ab0820?w=200&q=70" alt=""><div class="fav-info"><div class="fav-title">咒术回战 第三季</div><div class="fav-meta">动作 · PG-12</div><div class="fav-ep">已完结 · 共12集</div></div><div class="fav-del" onclick="event.preventDefault();this.closest('.fav-item').style.opacity='0';setTimeout(()=>this.closest('.fav-item').remove(),200)"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></div></a>
+          <a href="player.html" class="fav-item"><img class="fav-thumb" src="https://images.unsplash.com/photo-1502472584811-0a2f2feb8968?w=200&q=70" alt=""><div class="fav-info"><div class="fav-title">JOJO的奇妙冒险 飙马野郎</div><div class="fav-meta">冒险 · PG-12</div><div class="fav-ep">更新至07集</div></div><div class="fav-del" onclick="event.preventDefault();this.closest('.fav-item').style.opacity='0';setTimeout(()=>this.closest('.fav-item').remove(),200)"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></div></a>
+          <a href="player.html" class="fav-item"><img class="fav-thumb" src="https://images.unsplash.com/photo-1519638399535-1b036603ac77?w=200&q=70" alt=""><div class="fav-info"><div class="fav-title">相反的你和我</div><div class="fav-meta">爱情 · 校园</div><div class="fav-ep">已完结 · 共12集</div></div><div class="fav-del" onclick="event.preventDefault();this.closest('.fav-item').style.opacity='0';setTimeout(()=>this.closest('.fav-item').remove(),200)"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></div></a>
+        </div>
+      </div>
+    </div>
+
+    <!-- 消息通知 -->
+    <div id="tab-notice" class="tab-content" style="display:none">
+      <div class="p-card">
+        <div class="p-card-header">
+          <div class="p-card-title"><div class="p-card-title-dot"></div>消息通知</div>
+          <a href="#" class="p-card-action">全部已读</a>
+        </div>
+        <div class="notice-list">
+          <div class="notice-item"><div class="notice-dot"></div><div class="notice-icon new">🎉</div><div class="notice-body"><div class="notice-title">欢迎加入 MiniStream！注册成功，获得 10 积分奖励</div><div class="notice-time">2026-03-31 18:07:25</div></div></div>
+          <div class="notice-item"><div class="notice-dot"></div><div class="notice-icon new">📺</div><div class="notice-body"><div class="notice-title">您收藏的《葬送的芙莉莲 第二季》更新了第10集</div><div class="notice-time">2026-03-31 23:00:00</div></div></div>
+          <div class="notice-item"><div class="notice-dot read"></div><div class="notice-icon read">📢</div><div class="notice-body"><div class="notice-title read">系统通知：网站维护公告（3月28日 02:00-04:00）</div><div class="notice-time">2026-03-27 18:00:00</div></div></div>
+        </div>
+      </div>
+    </div>
+
+  </main>
+</div>
+
+<footer>
+  <div class="footer-logo">MiniStream</div>
+  <div class="footer-links">
+    <a href="index.html">首页</a>
+    <a href="show-anime.html">日番</a>
+    <a href="show-movie.html">剧场版</a>
+  </div>
+  <div class="footer-text">© 2026 MiniStream · 仅供学习使用</div>
+</footer>
+
+<script>
+  function switchTab(name, el) {
+    event && event.preventDefault();
+    document.querySelectorAll('.tab-content').forEach(t => t.style.display = 'none');
+    document.getElementById('tab-' + name).style.display = 'block';
+    document.querySelectorAll('.profile-nav-item').forEach(n => n.classList.remove('active'));
+    if (el) el.classList.add('active');
+  }
+</script>
+</body>
+</html>

@@ -1,0 +1,22 @@
+# Python
+backend/venv/
+backend/__pycache__/
+backend/app/__pycache__/
+backend/app/api/__pycache__/
+backend/app/models/__pycache__/
+backend/app/schemas/__pycache__/
+**/__pycache__/
+*.pyc
+*.pyo
+
+# 视频文件（太大了不上传）
+storage/uploads/
+storage/hls/
+
+# 环境变量
+.env
+*.env
+
+# 系统文件
+.DS_Store
+Thumbs.db

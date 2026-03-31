@@ -1,0 +1,189 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>剧场版 · MiniStream</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+SC:wght@300;400;500;700&family=Bebas+Neue&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="common.css">
+  <style>
+    .page-header { padding: 28px 32px 0; margin-bottom: 24px; }
+    .breadcrumb { display:flex; align-items:center; gap:8px; font-size:13px; color:var(--text3); margin-bottom:12px; }
+    .breadcrumb a { color:var(--text3); text-decoration:none; transition:color 0.2s; }
+    .breadcrumb a:hover { color:var(--accent); }
+    .breadcrumb span { color:var(--text2); }
+    .page-title { font-size:24px; font-weight:700; }
+
+    .content-layout { display:flex; gap:24px; padding:0 32px; align-items:flex-start; }
+
+    .sidebar { width:200px; flex-shrink:0; position:sticky; top:76px; }
+    .filter-section { margin-bottom:24px; }
+    .filter-title { font-size:12px; font-weight:600; color:var(--text3); letter-spacing:1px; text-transform:uppercase; margin-bottom:10px; padding-bottom:8px; border-bottom:1px solid var(--border); }
+    .filter-list { display:flex; flex-wrap:wrap; gap:6px; }
+    .filter-tag { font-size:12px; padding:4px 10px; border-radius:5px; background:var(--bg3); border:1px solid var(--border); color:var(--text2); cursor:pointer; transition:all 0.2s; text-decoration:none; }
+    .filter-tag:hover { border-color:var(--accent); color:var(--accent); }
+    .filter-tag.active { background:var(--accent); border-color:var(--accent); color:#fff; }
+    .filter-reset { display:inline-flex; align-items:center; gap:6px; font-size:12px; color:var(--text3); cursor:pointer; margin-top:8px; padding:4px 0; text-decoration:none; transition:color 0.2s; }
+    .filter-reset:hover { color:var(--accent); }
+
+    .main-content { flex:1; min-width:0; }
+    .sort-bar { display:flex; align-items:center; justify-content:space-between; margin-bottom:20px; padding-bottom:16px; border-bottom:1px solid var(--border); }
+    .sort-info { font-size:13px; color:var(--text3); }
+    .sort-info b { color:var(--text); }
+    .sort-btns { display:flex; gap:6px; }
+    .sort-btn { font-size:12px; padding:5px 12px; border-radius:6px; background:var(--bg3); border:1px solid var(--border); color:var(--text2); cursor:pointer; transition:all 0.2s; text-decoration:none; }
+    .sort-btn:hover { border-color:var(--accent); color:var(--accent); }
+    .sort-btn.active { background:var(--accent); border-color:var(--accent); color:#fff; }
+
+    /* MOVIE CARD — wider aspect ratio */
+    .card-grid { display:grid; grid-template-columns:repeat(auto-fill, minmax(180px,1fr)); gap:16px; margin-bottom:32px; }
+    .anime-card .card-thumb { aspect-ratio: 2/3; }
+
+    .pagination { display:flex; align-items:center; justify-content:center; gap:6px; padding:8px 0 32px; }
+    .page-btn { min-width:36px; height:36px; border-radius:8px; display:flex; align-items:center; justify-content:center; background:var(--bg2); border:1px solid var(--border); color:var(--text2); font-size:13px; cursor:pointer; transition:all 0.2s; text-decoration:none; padding:0 10px; }
+    .page-btn:hover { border-color:var(--accent); color:var(--accent); }
+    .page-btn.active { background:var(--accent); border-color:var(--accent); color:#fff; }
+    .page-btn.disabled { opacity:0.3; pointer-events:none; }
+    .page-ellipsis { color:var(--text3); font-size:13px; padding:0 4px; }
+
+    @media(max-width:900px) {
+      .content-layout { flex-direction:column; padding:0 16px; }
+      .sidebar { width:100%; position:static; }
+      .page-header { padding:20px 16px 0; }
+    }
+  </style>
+</head>
+<body>
+
+<nav>
+  <a href="index.html" class="logo">Mini<span>Stream</span></a>
+  <ul class="nav-links">
+    <li><a href="index.html">首页</a></li>
+    <li><a href="show-anime.html">日番</a></li>
+    <li><a href="show-movie.html" class="active">剧场版</a></li>
+    <li><a href="show-anime.html?filter=end">完结</a></li>
+    <li><a href="show-anime.html?sort=hits">排行榜</a></li>
+  </ul>
+  <div class="nav-search">
+    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
+    <input type="text" placeholder="搜索动漫...">
+  </div>
+</nav>
+
+<div class="page-header">
+  <div class="breadcrumb">
+    <a href="index.html">首页</a>
+    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m9 18 6-6-6-6"/></svg>
+    <span>剧场版</span>
+  </div>
+  <h1 class="page-title">剧场版</h1>
+</div>
+
+<div class="content-layout">
+  <aside class="sidebar">
+
+    <div class="filter-section">
+      <div class="filter-title">频道</div>
+      <div class="filter-list">
+        <a href="show-anime.html" class="filter-tag">日番</a>
+        <a href="show-movie.html" class="filter-tag active">剧场版</a>
+        <a href="show-anime.html?ch=live" class="filter-tag">真人番剧</a>
+        <a href="show-anime.html?ch=other" class="filter-tag">其他</a>
+      </div>
+    </div>
+
+    <div class="filter-section">
+      <div class="filter-title">类型</div>
+      <div class="filter-list">
+        <a href="#" class="filter-tag active" onclick="toggleFilter(this)">全部</a>
+        <a href="#" class="filter-tag" onclick="toggleFilter(this)">动作</a>
+        <a href="#" class="filter-tag" onclick="toggleFilter(this)">奇幻</a>
+        <a href="#" class="filter-tag" onclick="toggleFilter(this)">冒险</a>
+        <a href="#" class="filter-tag" onclick="toggleFilter(this)">剧情</a>
+        <a href="#" class="filter-tag" onclick="toggleFilter(this)">科幻</a>
+        <a href="#" class="filter-tag" onclick="toggleFilter(this)">喜剧</a>
+        <a href="#" class="filter-tag" onclick="toggleFilter(this)">悬疑</a>
+        <a href="#" class="filter-tag" onclick="toggleFilter(this)">爱情</a>
+      </div>
+    </div>
+
+    <div class="filter-section">
+      <div class="filter-title">年份</div>
+      <div class="filter-list">
+        <a href="#" class="filter-tag active" onclick="toggleFilter(this)">全部</a>
+        <a href="#" class="filter-tag" onclick="toggleFilter(this)">2026</a>
+        <a href="#" class="filter-tag" onclick="toggleFilter(this)">2025</a>
+        <a href="#" class="filter-tag" onclick="toggleFilter(this)">2024</a>
+        <a href="#" class="filter-tag" onclick="toggleFilter(this)">2023</a>
+        <a href="#" class="filter-tag" onclick="toggleFilter(this)">2022</a>
+        <a href="#" class="filter-tag" onclick="toggleFilter(this)">更早</a>
+      </div>
+    </div>
+
+    <a href="show-movie.html" class="filter-reset">
+      <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/><path d="M3 3v5h5"/></svg>
+      重置筛选
+    </a>
+  </aside>
+
+  <main class="main-content">
+    <div class="sort-bar">
+      <div class="sort-info">共 <b>248</b> 部剧场版 · 第 <b>1</b> / 9 页</div>
+      <div class="sort-btns">
+        <a href="#" class="sort-btn active">最新</a>
+        <a href="#" class="sort-btn">最热</a>
+        <a href="#" class="sort-btn">评分</a>
+      </div>
+    </div>
+
+    <div class="card-grid">
+      <a href="player.html" class="anime-card"><div class="card-thumb"><img src="https://images.unsplash.com/photo-1569701813229-33284b643e3c?w=300&q=70" alt=""><div class="card-overlay"><div class="play-icon"><svg width="18" height="18" viewBox="0 0 24 24" fill="white"><path d="M8 5v14l11-7z"/></svg></div></div><span class="card-badge">剧场版</span></div><div class="card-info"><div class="card-title">命运/奇异赝品</div><div class="card-meta">奇幻 · 2026</div></div></a>
+      <a href="player.html" class="anime-card"><div class="card-thumb"><img src="https://images.unsplash.com/photo-1519125323398-675f0ddb6308?w=300&q=70" alt=""><div class="card-overlay"><div class="play-icon"><svg width="18" height="18" viewBox="0 0 24 24" fill="white"><path d="M8 5v14l11-7z"/></svg></div></div><span class="card-badge">剧场版</span></div><div class="card-info"><div class="card-title">枪神 史丹比特 完结篇</div><div class="card-meta">动作 · 2026</div></div></a>
+      <a href="player.html" class="anime-card"><div class="card-thumb"><img src="https://images.unsplash.com/photo-1465101162946-4377e57745c3?w=300&q=70" alt=""><div class="card-overlay"><div class="play-icon"><svg width="18" height="18" viewBox="0 0 24 24" fill="white"><path d="M8 5v14l11-7z"/></svg></div></div><span class="card-badge">剧场版</span></div><div class="card-info"><div class="card-title">黄金神威 最终章</div><div class="card-meta">历史 · 2025</div></div></a>
+      <a href="player.html" class="anime-card"><div class="card-thumb"><img src="https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=300&q=70" alt=""><div class="card-overlay"><div class="play-icon"><svg width="18" height="18" viewBox="0 0 24 24" fill="white"><path d="M8 5v14l11-7z"/></svg></div></div><span class="card-badge">剧场版</span></div><div class="card-info"><div class="card-title">DARK MOON 月之祭坛</div><div class="card-meta">奇幻 · 2025</div></div></a>
+      <a href="player.html" class="anime-card"><div class="card-thumb"><img src="https://images.unsplash.com/photo-1451187580459-43490279c0fa?w=300&q=70" alt=""><div class="card-overlay"><div class="play-icon"><svg width="18" height="18" viewBox="0 0 24 24" fill="white"><path d="M8 5v14l11-7z"/></svg></div></div><span class="card-badge">剧场版</span></div><div class="card-info"><div class="card-title">地狱乐 剧场版</div><div class="card-meta">动作 · 2025</div></div></a>
+      <a href="player.html" class="anime-card"><div class="card-thumb"><img src="https://images.unsplash.com/photo-1519638399535-1b036603ac77?w=300&q=70" alt=""><div class="card-overlay"><div class="play-icon"><svg width="18" height="18" viewBox="0 0 24 24" fill="white"><path d="M8 5v14l11-7z"/></svg></div></div><span class="card-badge">剧场版</span></div><div class="card-info"><div class="card-title">进击的巨人 完结篇</div><div class="card-meta">动作 · 2024</div></div></a>
+      <a href="player.html" class="anime-card"><div class="card-thumb"><img src="https://images.unsplash.com/photo-1579546929518-9e396f3cc809?w=300&q=70" alt=""><div class="card-overlay"><div class="play-icon"><svg width="18" height="18" viewBox="0 0 24 24" fill="white"><path d="M8 5v14l11-7z"/></svg></div></div><span class="card-badge">剧场版</span></div><div class="card-info"><div class="card-title">鬼灭之刃 无限城篇</div><div class="card-meta">动作 · 2024</div></div></a>
+      <a href="player.html" class="anime-card"><div class="card-thumb"><img src="https://images.unsplash.com/photo-1511367461989-f85a21fda167?w=300&q=70" alt=""><div class="card-overlay"><div class="play-icon"><svg width="18" height="18" viewBox="0 0 24 24" fill="white"><path d="M8 5v14l11-7z"/></svg></div></div><span class="card-badge">剧场版</span></div><div class="card-info"><div class="card-title">咒术回战 0</div><div class="card-meta">动作 · 2024</div></div></a>
+    </div>
+
+    <div class="pagination">
+      <a href="#" class="page-btn disabled">首页</a>
+      <a href="#" class="page-btn disabled">‹</a>
+      <a href="#" class="page-btn active">1</a>
+      <a href="#" class="page-btn">2</a>
+      <a href="#" class="page-btn">3</a>
+      <span class="page-ellipsis">···</span>
+      <a href="#" class="page-btn">9</a>
+      <a href="#" class="page-btn">›</a>
+      <a href="#" class="page-btn">尾页</a>
+    </div>
+  </main>
+</div>
+
+<footer>
+  <div class="footer-logo">MiniStream</div>
+  <div class="footer-links">
+    <a href="index.html">首页</a>
+    <a href="show-anime.html">日番</a>
+    <a href="show-movie.html">剧场版</a>
+  </div>
+  <div class="footer-text">© 2026 MiniStream · 仅供学习使用</div>
+</footer>
+
+<script>
+function toggleFilter(el) {
+  event.preventDefault();
+  const parent = el.closest('.filter-list');
+  if (el.textContent === '全部') {
+    parent.querySelectorAll('.filter-tag').forEach(t => t.classList.remove('active'));
+    el.classList.add('active');
+  } else {
+    parent.querySelector('.filter-tag:first-child')?.classList.remove('active');
+    el.classList.toggle('active');
+  }
+}
+</script>
+</body>
+</html>

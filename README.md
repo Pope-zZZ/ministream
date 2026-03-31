@@ -163,7 +163,7 @@ docker start mysql # 重新启动
 - [x] 前后端真实对接
 - [x] Docker Compose 一键部署
 - [ ] 异步转码队列（Celery）
-- [ ] 弹幕系统（WebSocket）
+- [x] 弹幕系统（WebSocket）
 
 ## 📄 License
 
